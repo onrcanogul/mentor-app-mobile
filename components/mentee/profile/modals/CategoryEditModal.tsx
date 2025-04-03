@@ -38,7 +38,7 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
       setAllCategories(response);
       setDropdownItems(
         response.map((cat) => ({
-          label: cat.name,
+          label: t(`${cat.localizationCode}`),
           value: cat.id,
         }))
       );
@@ -51,14 +51,13 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
     setSelectedCategoryIds(categories.map((c) => c.id!));
   }, [categories]);
 
-  // ✅ Geri tuşu desteği (Android)
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
         if (visible) {
           onClose();
-          return true; // Varsayılan davranışı engelle
+          return true;
         }
         return false;
       }
@@ -98,8 +97,8 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
       visible={visible}
       animationType="fade"
       transparent
-      onRequestClose={onClose} // ✅ Android geri tuşu için gerekli
-      statusBarTranslucent={true} // ✅ Üst barla uyumlu
+      onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>

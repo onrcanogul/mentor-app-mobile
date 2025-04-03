@@ -16,6 +16,7 @@ import mentorService from "../../../../services/mentor-service";
 import toastrService from "../../../../services/toastr-service";
 import changeNavigationBarColor from "react-native-navigation-bar-color";
 import userService from "../../../../services/user-service";
+import { useTranslation } from "react-i18next";
 
 const formatDate = (date: any) => {
   try {
@@ -41,6 +42,7 @@ const ExperienceEditModal: React.FC<Props> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [editedExperiences, setEditedExperiences] = useState<Experience[]>([]);
   const [newExp, setNewExp] = useState({
     title: "",
@@ -55,7 +57,6 @@ const ExperienceEditModal: React.FC<Props> = ({
     setEditedExperiences(experiences);
   }, [experiences]);
 
-  // ✅ Android geri tuşu
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -67,11 +68,9 @@ const ExperienceEditModal: React.FC<Props> = ({
         return false;
       }
     );
-
     return () => backHandler.remove();
   }, [visible]);
 
-  // ✅ Navigation bar rengi
   useEffect(() => {
     if (visible && Platform.OS === "android") {
       // changeNavigationBarColor("#121212", false);
@@ -134,13 +133,11 @@ const ExperienceEditModal: React.FC<Props> = ({
       editedExperiences
     );
     if (result) {
-      toastrService.success("Deneyim bilgileri kaydedildi.");
+      toastrService.success(t("experienceSaveSuccess"));
       onSave(editedExperiences);
       onClose();
     } else {
-      toastrService.error(
-        "Deneyim bilgilerini kaydederken bir hata meydana geldi."
-      );
+      toastrService.error(t("experienceSaveError"));
     }
   };
 
@@ -154,18 +151,18 @@ const ExperienceEditModal: React.FC<Props> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Deneyimleri Düzenle</Text>
+          <Text style={styles.modalTitle}>{t("editExperiencesTitle")}</Text>
 
-          {/* Yeni Deneyim Ekle */}
+          {/* Yeni Deneyim */}
           <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>Yeni Deneyim Ekle</Text>
+            <Text style={styles.sectionTitle}>{t("addNewExperience")}</Text>
             {[
-              { label: "Pozisyon Başlığı", key: "title" },
-              { label: "Şirket", key: "company" },
-              { label: "Lokasyon", key: "location" },
-              { label: "Başlangıç (YYYY-MM-DD)", key: "StartDate" },
-              { label: "Bitiş (YYYY-MM-DD)", key: "EndDate" },
-              { label: "Açıklama", key: "description" },
+              { label: t("positionTitle"), key: "title" },
+              { label: t("company"), key: "company" },
+              { label: t("location"), key: "location" },
+              { label: t("startDate"), key: "StartDate" },
+              { label: t("endDate"), key: "EndDate" },
+              { label: t("description"), key: "description" },
             ].map(({ label, key }) => (
               <TextInput
                 key={key}
@@ -177,7 +174,7 @@ const ExperienceEditModal: React.FC<Props> = ({
               />
             ))}
             <TouchableOpacity onPress={addExperience} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ Ekle</Text>
+              <Text style={styles.addButtonText}>+ {t("add")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -187,7 +184,7 @@ const ExperienceEditModal: React.FC<Props> = ({
               <View key={exp.id || index} style={styles.expItem}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Pozisyon Başlığı"
+                  placeholder={t("positionTitle")}
                   placeholderTextColor="#888"
                   value={exp.title}
                   onChangeText={(text) =>
@@ -196,7 +193,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Şirket"
+                  placeholder={t("company")}
                   placeholderTextColor="#888"
                   value={exp.company ?? ""}
                   onChangeText={(text) =>
@@ -205,7 +202,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Lokasyon"
+                  placeholder={t("location")}
                   placeholderTextColor="#888"
                   value={exp.location}
                   onChangeText={(text) =>
@@ -214,7 +211,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Başlangıç (YYYY-MM-DD)"
+                  placeholder={t("startDate")}
                   placeholderTextColor="#888"
                   value={formatDate(exp.StartDate)}
                   onChangeText={(text) =>
@@ -223,7 +220,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Bitiş (YYYY-MM-DD)"
+                  placeholder={t("endDate")}
                   placeholderTextColor="#888"
                   value={formatDate(exp.EndDate)}
                   onChangeText={(text) =>
@@ -232,7 +229,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Açıklama"
+                  placeholder={t("description")}
                   placeholderTextColor="#888"
                   value={exp.description ?? ""}
                   onChangeText={(text) =>
@@ -240,7 +237,7 @@ const ExperienceEditModal: React.FC<Props> = ({
                   }
                   multiline
                 />
-                <Text style={styles.skillLabel}>Yetenekler:</Text>
+                <Text style={styles.skillLabel}>{t("skills")}:</Text>
                 {exp.skills.length > 0 ? (
                   exp.skills.map((skill: Skill) => (
                     <Text key={skill.id} style={styles.skillItem}>
@@ -249,26 +246,25 @@ const ExperienceEditModal: React.FC<Props> = ({
                   ))
                 ) : (
                   <Text style={{ color: "#999", marginLeft: 10 }}>
-                    Yetenek eklenmedi.
+                    {t("noSkillsAdded")}
                   </Text>
                 )}
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => deleteExperience(index)}
                 >
-                  <Text style={styles.deleteButtonText}>Sil</Text>
+                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
 
-          {/* Butonlar */}
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>İptal</Text>
+              <Text style={styles.buttonText}>{t("cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Kaydet</Text>
+              <Text style={styles.buttonText}>{t("save")}</Text>
             </TouchableOpacity>
           </View>
         </View>

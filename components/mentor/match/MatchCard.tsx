@@ -93,7 +93,14 @@ const MatchCard = ({
             });
           }}
         >
-          <Image source={{ uri: "asdasd" }} style={styles.avatar} />
+          <Image
+            source={{
+              uri:
+                "https://ui-avatars.com/api/?name=" +
+                match.inexperiencedUser.username,
+            }}
+            style={styles.avatar}
+          />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{match.experiencedUser.username}</Text>
             <Text style={styles.field}>{match.experiencedUser.username}</Text>

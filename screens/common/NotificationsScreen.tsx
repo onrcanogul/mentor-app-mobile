@@ -69,9 +69,7 @@ const NotificationsScreen = () => {
               ? `💬 ${t("messageNotificationTitle")}`
               : "🔔 Sistem Güncellemesi"}
           </Text>
-          <Text style={styles.message}>
-            {"onurcan"} - {t(item.content)}
-          </Text>
+          <Text style={styles.message}>{t(item.content)}</Text>
           <Text style={styles.time}>{formatDate(item.createdDate)}</Text>
         </View>
       </Card>

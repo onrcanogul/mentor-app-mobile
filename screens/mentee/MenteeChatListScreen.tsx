@@ -70,7 +70,9 @@ const MenteeChatListScreen = () => {
       >
         <View style={styles.chatContainer}>
           <View>
-            <Text style={styles.name}>{"Onurcan Oğul"}</Text>
+            <Text style={styles.name}>
+              {item.match.experiencedUser.username}
+            </Text>
             <Text style={styles.lastMessage}>
               {item.messages?.[item.messages.length - 1]?.content ??
                 t("noMessages")}

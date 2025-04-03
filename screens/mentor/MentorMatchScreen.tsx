@@ -6,7 +6,6 @@ import MatchSection from "../../components/mentor/match/MatchSection";
 import { Match, MatchStatus } from "../../domain/match";
 import { useTranslation } from "react-i18next";
 import matchService from "../../services/match-service";
-import LoadingSpinner from "../../utils/spinner";
 import { useFocusEffect } from "@react-navigation/native";
 import userService from "../../services/user-service";
 

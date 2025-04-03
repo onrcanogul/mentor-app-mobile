@@ -48,7 +48,6 @@ const EducationEditModal: React.FC<Props> = ({
     setEditedEducations(educations);
   }, [educations]);
 
-  // ✅ Android geri tuşu
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -127,11 +126,11 @@ const EducationEditModal: React.FC<Props> = ({
       editedEducations
     );
     if (result) {
-      toastrService.success(t("educationSuccessSave"));
+      toastrService.success(t("educationSaveSuccess"));
       onSave(editedEducations);
       onClose();
     } else {
-      toastrService.error(t("educationErrorSave"));
+      toastrService.error(t("educationSaveError"));
     }
   };
 
@@ -145,19 +144,19 @@ const EducationEditModal: React.FC<Props> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Eğitim Bilgilerini Düzenle</Text>
+          <Text style={styles.modalTitle}>{t("editEducationsTitle")}</Text>
 
           <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>Yeni Eğitim Ekle</Text>
+            <Text style={styles.sectionTitle}>{t("addNewEducation")}</Text>
             {[
-              { label: "Okul", key: "school" },
-              { label: "Derece", key: "degree" },
-              { label: "Alan", key: "fieldOfStudy" },
-              { label: "Başlangıç (YYYY-MM-DD)", key: "startDate" },
-              { label: "Bitiş (YYYY-MM-DD)", key: "endDate" },
-              { label: "Not Ortalaması", key: "grade" },
-              { label: "Etkinlikler", key: "activities" },
-              { label: "Açıklama", key: "description" },
+              { label: t("school"), key: "school" },
+              { label: t("degree"), key: "degree" },
+              { label: t("fieldOfStudy"), key: "fieldOfStudy" },
+              { label: t("startDate"), key: "startDate" },
+              { label: t("endDate"), key: "endDate" },
+              { label: t("grade"), key: "grade" },
+              { label: t("activities"), key: "activities" },
+              { label: t("description"), key: "description" },
             ].map(({ label, key }) => (
               <TextInput
                 key={key}
@@ -169,7 +168,7 @@ const EducationEditModal: React.FC<Props> = ({
               />
             ))}
             <TouchableOpacity onPress={addEducation} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ Ekle</Text>
+              <Text style={styles.addButtonText}>+ {t("add")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -177,35 +176,43 @@ const EducationEditModal: React.FC<Props> = ({
             {editedEducations.map((edu, index) => (
               <View key={edu.id || index} style={styles.eduItem}>
                 {[
-                  { label: "Okul", key: "school", value: edu.school ?? "" },
-                  { label: "Derece", key: "degree", value: edu.degree ?? "" },
                   {
-                    label: "Alan",
+                    label: t("school"),
+                    key: "school",
+                    value: edu.school ?? "",
+                  },
+                  {
+                    label: t("degree"),
+                    key: "degree",
+                    value: edu.degree ?? "",
+                  },
+                  {
+                    label: t("fieldOfStudy"),
                     key: "fieldOfStudy",
                     value: edu.fieldOfStudy ?? "",
                   },
                   {
-                    label: "Başlangıç (YYYY-MM-DD)",
+                    label: t("startDate"),
                     key: "startDate",
                     value: formatDate(edu.startDate),
                   },
                   {
-                    label: "Bitiş (YYYY-MM-DD)",
+                    label: t("endDate"),
                     key: "endDate",
                     value: formatDate(edu.endDate),
                   },
                   {
-                    label: "Not Ortalaması",
+                    label: t("grade"),
                     key: "grade",
                     value: edu.grade ?? "",
                   },
                   {
-                    label: "Etkinlikler",
+                    label: t("activities"),
                     key: "activities",
                     value: edu.activities ?? "",
                   },
                   {
-                    label: "Açıklama",
+                    label: t("description"),
                     key: "description",
                     value: edu.description ?? "",
                   },
@@ -226,7 +233,7 @@ const EducationEditModal: React.FC<Props> = ({
                   style={styles.deleteButton}
                   onPress={() => deleteEducation(index)}
                 >
-                  <Text style={styles.deleteButtonText}>Sil</Text>
+                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -234,10 +241,10 @@ const EducationEditModal: React.FC<Props> = ({
 
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>İptal</Text>
+              <Text style={styles.buttonText}>{t("cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Kaydet</Text>
+              <Text style={styles.buttonText}>{t("save")}</Text>
             </TouchableOpacity>
           </View>
         </View>

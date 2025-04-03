@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Modal,
   FlatList,
-  TouchableOpacity,
   BackHandler,
   Platform,
 } from "react-native";
@@ -14,6 +13,7 @@ import { Goal } from "../../../../domain/goal";
 import menteeService from "../../../../services/mentee-service";
 import * as SystemUI from "expo-system-ui";
 import userService from "../../../../services/user-service";
+import { useTranslation } from "react-i18next";
 
 interface GoalsEditModalProps {
   visible: boolean;
@@ -28,10 +28,10 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
   goals,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [updatedGoals, setUpdatedGoals] = useState<Goal[]>(goals);
   const [newGoalText, setNewGoalText] = useState<string>("");
   const [newTargetDate, setNewTargetDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -57,7 +57,6 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
   const addGoal = async () => {
     if (newGoalText.trim()) {
       const id = (await userService.getCurrentUser()).id;
-      console.log(id);
       const response = await menteeService.addGoal({
         text: newGoalText,
         targetDate: newTargetDate,
@@ -86,13 +85,6 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
     }
   };
 
-  const onChangeDate = (_event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setNewTargetDate(selectedDate);
-    }
-  };
-
   return (
     <Modal
       visible={visible}
@@ -103,7 +95,7 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Hedefleri Düzenle</Text>
+          <Text style={styles.modalTitle}>{t("editGoalsTitle")}</Text>
 
           <FlatList
             data={updatedGoals}
@@ -123,37 +115,19 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
 
           <TextInput
             style={styles.input}
-            placeholder="Yeni hedef yaz..."
+            placeholder={t("newGoalPlaceholder")}
             placeholderTextColor="#A0A0A0"
             value={newGoalText}
             onChangeText={setNewGoalText}
           />
 
-          {/* <TouchableOpacity
-            onPress={() => setShowDatePicker(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateButtonText}>
-              Tarih Seç: {newTargetDate.toLocaleDateString()}
-            </Text>
-          </TouchableOpacity>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={newTargetDate}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={onChangeDate}
-            />
-          )} */}
-
           <Button onPress={addGoal} style={styles.addButton}>
-            Ekle
+            {t("add")}
           </Button>
 
           <View style={styles.actions}>
             <Button textColor="#FFD700" onPress={onClose}>
-              Kapat
+              {t("cancel")}
             </Button>
           </View>
         </View>
@@ -161,6 +135,8 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
     </Modal>
   );
 };
+
+export default GoalsEditModal;
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -203,16 +179,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
   },
-  dateButton: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: "#2C2C2C",
-    borderRadius: 5,
-  },
-  dateButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-  },
   addButton: {
     marginTop: 10,
   },
@@ -222,5 +188,3 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
-
-export default GoalsEditModal;

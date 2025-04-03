@@ -127,11 +127,11 @@ const SkillEditModal: React.FC<Props> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Yetenekleri Düzenle</Text>
+          <Text style={styles.modalTitle}> {t("editSkillsTitle")}</Text>
 
           {/* Yeni Yetenek Ekleme */}
           <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>Yeni Yetenek Ekle</Text>
+            <Text style={styles.sectionTitle}>{t("addNewSkill")}</Text>
             <TextInput
               style={styles.input}
               placeholder="Yetenek Adı"
@@ -149,7 +149,7 @@ const SkillEditModal: React.FC<Props> = ({
               }
             />
             <View style={styles.starsContainer}>
-              <Text style={styles.sliderLabel}>Seviye:</Text>
+              <Text style={styles.sliderLabel}>{t("level")}:</Text>
               <View style={{ flexDirection: "row" }}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
@@ -168,7 +168,7 @@ const SkillEditModal: React.FC<Props> = ({
             </View>
 
             <TouchableOpacity onPress={addSkill} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ Ekle</Text>
+              <Text style={styles.addButtonText}>+ {t("add")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -178,14 +178,14 @@ const SkillEditModal: React.FC<Props> = ({
               <View key={skill.id || index} style={styles.skillItem}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Yetenek Adı"
+                  placeholder={t("skillNamePlaceholder")}
                   placeholderTextColor="#888"
                   value={skill.name}
                   onChangeText={(text) => updateSkill(index, "name", text)}
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Açıklama"
+                  placeholder={t("skillDescriptionPlaceholder")}
                   placeholderTextColor="#888"
                   value={skill.description ?? ""}
                   onChangeText={(text) =>
@@ -193,7 +193,7 @@ const SkillEditModal: React.FC<Props> = ({
                   }
                 />
                 <View style={styles.starsContainer}>
-                  <Text style={styles.sliderLabel}>Seviye:</Text>
+                  <Text style={styles.sliderLabel}>{t("level")}:</Text>
                   <View style={{ flexDirection: "row" }}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <TouchableOpacity
@@ -211,7 +211,7 @@ const SkillEditModal: React.FC<Props> = ({
                   </View>
                 </View>
 
-                <Text style={styles.label}>İlgili Deneyimler:</Text>
+                <Text style={styles.label}> {t("relatedExperiences")}</Text>
                 {skill.experiences?.length > 0 ? (
                   skill.experiences.map((exp: Experience) => (
                     <Text key={exp.id} style={styles.experienceItem}>
@@ -220,7 +220,7 @@ const SkillEditModal: React.FC<Props> = ({
                   ))
                 ) : (
                   <Text style={{ color: "#999", marginLeft: 10 }}>
-                    Deneyim bağlantısı yok.
+                    {t("noExperienceLinked")}
                   </Text>
                 )}
 
@@ -228,7 +228,7 @@ const SkillEditModal: React.FC<Props> = ({
                   style={styles.deleteButton}
                   onPress={() => deleteSkill(index)}
                 >
-                  <Text style={styles.deleteButtonText}>Sil</Text>
+                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -237,10 +237,10 @@ const SkillEditModal: React.FC<Props> = ({
           {/* Kaydet / İptal */}
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>İptal</Text>
+              <Text style={styles.buttonText}>{t("cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Kaydet</Text>
+              <Text style={styles.buttonText}>{t("save")}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -38,7 +38,7 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
       setAllCategories(response);
       setDropdownItems(
         response.map((cat) => ({
-          label: cat.name,
+          label: t(`${cat.localizationCode}`),
           value: cat.id,
         }))
       );
@@ -105,7 +105,7 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Kategorileri Seç</Text>
+          <Text style={styles.modalTitle}>{t("categoryEditTitle")}</Text>
 
           <DropDownPicker
             multiple={true}
@@ -142,10 +142,10 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
 
           <View style={styles.actions}>
             <Button onPress={onClose} style={{ backgroundColor: "#FFD700" }}>
-              İptal
+              {t("cancel")}
             </Button>
             <Button style={{ backgroundColor: "#FFD700" }} onPress={handleSave}>
-              Kaydet
+              {t("save")}
             </Button>
           </View>
         </View>

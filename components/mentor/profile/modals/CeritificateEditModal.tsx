@@ -39,10 +39,12 @@ const CertificateEditModal: React.FC<Props> = ({
   const [newIcon, setNewIcon] = useState("");
   const [newFrom, setNewFrom] = useState("");
 
+  // İlk yükleme - gelen props'u state'e aktar
   useEffect(() => {
     setEditedCertificates(certificates);
   }, [certificates]);
 
+  // Android geri tuşu kapatıldığında modalı kapat
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -54,13 +56,13 @@ const CertificateEditModal: React.FC<Props> = ({
         return false;
       }
     );
-
     return () => backHandler.remove();
   }, [visible]);
 
+  // Navigation bar rengini ayarla (opsiyonel)
   useEffect(() => {
     if (visible && Platform.OS === "android") {
-      // changeNavigationBarColor("#121212", false);
+      // changeNavigationBarColor("#121212", false); // açmak istersen
     }
   }, [visible]);
 
@@ -108,11 +110,11 @@ const CertificateEditModal: React.FC<Props> = ({
     );
 
     if (result) {
-      toastrService.success(t("certificateSuccessSave"));
+      toastrService.success(t("certificateSaveSuccess"));
       onSave(editedCertificates);
       onClose();
     } else {
-      toastrService.error(t("certificateErrorSave"));
+      toastrService.error(t("certificateSaveError"));
     }
   };
 
@@ -126,41 +128,41 @@ const CertificateEditModal: React.FC<Props> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Sertifikaları Düzenle</Text>
+          <Text style={styles.modalTitle}>{t("editCertificatesTitle")}</Text>
 
-          {/* Yeni Sertifika Ekleme Alanı */}
+          {/* Yeni Sertifika */}
           <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>Yeni Sertifika Ekle</Text>
+            <Text style={styles.sectionTitle}>{t("addNewCertificate")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="certificateName"
+              placeholder={t("certificateName")}
               placeholderTextColor="#888"
               value={newName}
               onChangeText={setNewName}
             />
             <TextInput
               style={styles.input}
-              placeholder="description"
+              placeholder={t("description")}
               placeholderTextColor="#888"
               value={newDescription}
               onChangeText={setNewDescription}
             />
             <TextInput
               style={styles.input}
-              placeholder="İkon URL"
+              placeholder={t("iconUrl")}
               placeholderTextColor="#888"
               value={newIcon}
               onChangeText={setNewIcon}
             />
             <TextInput
               style={styles.input}
-              placeholder="company"
+              placeholder={t("organization")}
               placeholderTextColor="#888"
               value={newFrom}
               onChangeText={setNewFrom}
             />
             <TouchableOpacity onPress={addCertificate} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ Ekle</Text>
+              <Text style={styles.addButtonText}>+ {t("add")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -170,7 +172,7 @@ const CertificateEditModal: React.FC<Props> = ({
               <View key={cert.id || index} style={styles.certItem}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Sertifika Adı"
+                  placeholder={t("certificateName")}
                   placeholderTextColor="#888"
                   value={cert.name}
                   onChangeText={(text) =>
@@ -179,7 +181,7 @@ const CertificateEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Açıklama"
+                  placeholder={t("description")}
                   placeholderTextColor="#888"
                   value={cert.description ?? ""}
                   onChangeText={(text) =>
@@ -188,7 +190,7 @@ const CertificateEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="İkon URL"
+                  placeholder={t("iconUrl")}
                   placeholderTextColor="#888"
                   value={cert.icon ?? ""}
                   onChangeText={(text) =>
@@ -197,7 +199,7 @@ const CertificateEditModal: React.FC<Props> = ({
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Kuruluş"
+                  placeholder={t("organization")}
                   placeholderTextColor="#888"
                   value={cert.from}
                   onChangeText={(text) =>
@@ -208,19 +210,19 @@ const CertificateEditModal: React.FC<Props> = ({
                   style={styles.deleteButton}
                   onPress={() => deleteCertificate(index)}
                 >
-                  <Text style={styles.deleteButtonText}>Sil</Text>
+                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
 
-          {/* Kaydet / İptal */}
+          {/* Butonlar */}
           <View style={styles.buttonRow}>
             <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>İptal</Text>
+              <Text style={styles.buttonText}>{t("cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Kaydet</Text>
+              <Text style={styles.buttonText}>{t("save")}</Text>
             </TouchableOpacity>
           </View>
         </View>
