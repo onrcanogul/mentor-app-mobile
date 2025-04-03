@@ -23,6 +23,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7f9dd9f1-8d38-4f8a-8b50-89413a2bcdf7"
+      }
+    },
+    "owner": "onrcanogul"
   }
 }
