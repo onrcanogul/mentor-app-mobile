@@ -17,6 +17,7 @@ import aiAssistantService from "../../services/ai-assistant-service";
 import { AIChat } from "../../domain/aichat";
 import { AIMessage, AIMessageSender } from "../../domain/aimessage";
 import userService from "../../services/user-service";
+import { useTranslation } from "react-i18next";
 
 interface ChatScreenProps {
   route: {
@@ -31,6 +32,7 @@ interface ChatScreenProps {
 }
 
 const AiChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
+  const { t } = useTranslation();
   const { chatId, user } = route.params;
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [inputText, setInputText] = useState<string>("");
@@ -122,7 +124,7 @@ const AiChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
             source={require("../../assets/ai-icon.png")}
             style={styles.avatar}
           />
-          <Text style={styles.username}>AI Asistan</Text>
+          <Text style={styles.username}>{t("aiAssistant")}</Text>
         </View>
 
         <FlatList
@@ -139,15 +141,13 @@ const AiChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
           ListFooterComponent={
             isTyping ? (
               <View style={styles.typingIndicator}>
-                <Text style={styles.typingText}>AI Asistan yazıyor...</Text>
+                <Text style={styles.typingText}>{t("aiAssistant")}...</Text>
               </View>
             ) : null
           }
           ListEmptyComponent={
             !loading && (
-              <Text style={styles.emptyText}>
-                Henüz mesaj yok. Bir şeyler yazmayı dene! 💬
-              </Text>
+              <Text style={styles.emptyText}>{t("noMessages")} 💬</Text>
             )
           }
         />
