@@ -24,7 +24,7 @@ const SkillList = ({ skills, onEdit, isOwn }: any) => {
             </Chip>
           ))
         ) : (
-          <Text style={styles.emptyText}>Yetenek bilgisi eklenmemiş.</Text>
+          <Text style={styles.emptyText}>{t("skillNotAdded")}</Text>
         )}
       </View>
     </Card>

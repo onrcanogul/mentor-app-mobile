@@ -153,11 +153,12 @@ const MentorProfileScreen = () => {
             <View style={styles.nameSection}>
               <Text style={styles.nameText}>{mentor.user.username}</Text>
               <Text style={styles.roleText}>Mentor</Text>
+              <Text style={styles.roleText}>{mentor.user.email}</Text>
             </View>
             {isOwn && (
               <View style={styles.actionButtons}>
                 <IconButton
-                  icon="cog"
+                  icon="translate"
                   iconColor="#FFD700"
                   size={22}
                   onPress={() => navigator.navigate("Settings")}

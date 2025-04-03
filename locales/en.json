@@ -63,6 +63,13 @@
   "certificateSaveSuccess": "Certificates saved successfully.",
   "certificateSaveError": "An error occurred while saving certificates.",
 
+  "categoryNotAdded": "Category information has not been added.",
+  "categoryNotAdded": "No category information added.",
+  "skillNotAdded": "No skill information added.",
+  "experienceNotAdded": "No experience information added.",
+  "educationNotAdded": "No education information added.",
+  "certificateNotAdded": "No certificate information added.",
+
   "editGoalsTitle": "Edit Goals",
   "newGoalPlaceholder": "Write a new goal...",
 

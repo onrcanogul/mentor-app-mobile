@@ -64,6 +64,12 @@
   "certificateSaveSuccess": "Sertifikalar başarıyla kaydedildi.",
   "certificateSaveError": "Sertifikalar kaydedilirken bir hata oluştu.",
 
+  "categoryNotAdded": "Kategori bilgisi eklenmedi.",
+  "skillNotAdded": "Yetenek bilgisi eklenmedi.",
+  "experienceNotAdded": "Deneyim bilgisi eklenmedi.",
+  "educationNotAdded": "Eğitim bilgisi eklenmedi.",
+  "certificateNotAdded": "Sertifika bilgisi eklenmedi.",
+
   "editGoalsTitle": "Hedefleri Düzenle",
   "newGoalPlaceholder": "Yeni hedef yaz...",
 

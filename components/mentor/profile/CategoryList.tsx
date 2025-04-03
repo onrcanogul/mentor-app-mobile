@@ -31,7 +31,7 @@ const CategorySelection: React.FC<Props> = ({ categories, onEdit, isOwn }) => {
             </Chip>
           ))
         ) : (
-          <Text style={styles.emptyText}>Kategori bilgisi eklenmemiş.</Text>
+          <Text style={styles.emptyText}>{t("categoryNotAdded")}</Text>
         )}
       </View>
     </Card>

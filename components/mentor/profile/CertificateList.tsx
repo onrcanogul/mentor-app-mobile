@@ -24,7 +24,7 @@ const CertificateList = ({ certificates, onEdit, isOwn }: any) => {
             </Text>
           ))
         ) : (
-          <Text style={styles.emptyText}>Sertifika eklenmemiş.</Text>
+          <Text style={styles.emptyText}>{t("certificateNotAdded")}</Text>
         )}
       </View>
     </Card>

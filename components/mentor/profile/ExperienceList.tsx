@@ -25,7 +25,7 @@ const ExperienceList = ({ experiences, onEdit, isOwn }: any) => {
             </Text>
           ))
         ) : (
-          <Text style={styles.emptyText}>Deneyim bilgisi yok.</Text>
+          <Text style={styles.emptyText}>{t("experienceNotAdded")}</Text>
         )}
       </View>
     </Card>

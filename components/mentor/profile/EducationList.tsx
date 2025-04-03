@@ -23,7 +23,7 @@ const EducationList = ({ educations, onEdit, isOwn }: any) => {
             </Text>
           ))
         ) : (
-          <Text style={styles.emptyText}>Eğitim bilgisi yok.</Text>
+          <Text style={styles.emptyText}>{t("educationNotAdded")}</Text>
         )}
       </View>
     </Card>

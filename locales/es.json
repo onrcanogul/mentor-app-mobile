@@ -60,6 +60,12 @@
   "certificateSaveSuccess": "Certificados guardados con éxito.",
   "certificateSaveError": "Ocurrió un error al guardar los certificados.",
 
+  "categoryNotAdded": "No se ha agregado información de categoría.",
+  "skillNotAdded": "No se ha agregado información de habilidad.",
+  "experienceNotAdded": "No se ha agregado información de experiencia.",
+  "educationNotAdded": "No se ha agregado información de educación.",
+  "certificateNotAdded": "No se ha agregado información de certificado.",
+
   "editGoalsTitle": "Editar objetivos",
   "newGoalPlaceholder": "Escribe un nuevo objetivo...",
 
