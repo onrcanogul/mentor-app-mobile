@@ -1,0 +1,124 @@
+// import React from "react";
+// import { useTranslation } from "react-i18next";
+// import { View, StyleSheet, ScrollView } from "react-native";
+// import { List, Divider, Text, Switch } from "react-native-paper";
+// import { SafeAreaView } from "react-native-safe-area-context";
+
+// const SettingsScreen = () => {
+//   const { t } = useTranslation();
+//   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+//   const [darkModeEnabled, setDarkModeEnabled] = React.useState(true);
+
+//   return (
+//     <SafeAreaView style={{ flex: 1, backgroundColor: "#121212" }}>
+//       <ScrollView style={styles.container}>
+//         <List.Section>
+//           <List.Subheader style={styles.subheader}>
+//             {t("account")}
+//           </List.Subheader>
+
+//           <List.Item
+//             title={t("profileInfos")}
+//             description={t("profileDescription")}
+//             left={() => <List.Icon icon="account-circle" color="#FFD700" />}
+//             onPress={() => console.log("Profil Bilgileri")}
+//             titleStyle={styles.title}
+//             descriptionStyle={styles.description}
+//           />
+
+//           <Divider style={styles.divider} />
+
+//           <List.Item
+//             title={t("changePasswordTitle")}
+//             description={t("changePasswordDescription")}
+//             left={() => <List.Icon icon="lock" color="#FFD700" />}
+//             onPress={() => console.log("Şifreyi Değiştir")}
+//             titleStyle={styles.title}
+//             descriptionStyle={styles.description}
+//           />
+//         </List.Section>
+
+//         <List.Section>
+//           <List.Subheader style={styles.subheader}>
+//             {t("preferences")}
+//           </List.Subheader>
+
+//           <List.Item
+//             title={t("notifications")}
+//             left={() => <List.Icon icon="bell-ring" color="#FFD700" />}
+//             right={() => (
+//               <Switch
+//                 value={notificationsEnabled}
+//                 onValueChange={() =>
+//                   setNotificationsEnabled(!notificationsEnabled)
+//                 }
+//                 color="#FFD700"
+//               />
+//             )}
+//             titleStyle={styles.title}
+//           />
+
+//           <List.Item
+//             title={t("darkMode")}
+//             left={() => <List.Icon icon="weather-night" color="#FFD700" />}
+//             right={() => (
+//               <Switch
+//                 value={darkModeEnabled}
+//                 onValueChange={() => setDarkModeEnabled(!darkModeEnabled)}
+//                 color="#FFD700"
+//               />
+//             )}
+//             titleStyle={styles.title}
+//           />
+//         </List.Section>
+
+//         <List.Item
+//           title={t("privacyPolicy")}
+//           left={() => <List.Icon icon="shield-lock" color="#FFD700" />}
+//           onPress={() => console.log("Gizlilik Politikası")}
+//           titleStyle={styles.title}
+//         />
+
+//         <List.Item
+//           title={t("about")}
+//           left={() => <List.Icon icon="information-outline" color="#FFD700" />}
+//           onPress={() => console.log("Hakkında")}
+//           titleStyle={styles.title}
+//         />
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+
+// export default SettingsScreen;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#121212",
+//     padding: 10,
+//   },
+//   header: {
+//     color: "#FFFFFF",
+//     fontSize: 24,
+//     fontWeight: "bold",
+//     marginVertical: 15,
+//     alignSelf: "center",
+//   },
+//   subheader: {
+//     color: "#FFD700",
+//     fontSize: 16,
+//     marginBottom: 5,
+//   },
+//   title: {
+//     color: "#FFFFFF",
+//     fontSize: 16,
+//   },
+//   description: {
+//     color: "#A0A0A0",
+//     fontSize: 13,
+//   },
+//   divider: {
+//     backgroundColor: "#2A2A2A",
+//   },
+// });
