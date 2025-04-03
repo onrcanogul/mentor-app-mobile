@@ -23,6 +23,7 @@ import MentorMatchScreen from "./screens/mentor/MentorMatchScreen";
 import MenteeMatchScreen from "./screens/mentee/MenteeMatchScreen";
 import MenteeChatScreen from "./screens/mentee/MenteeChatScreen";
 import MentorChatScreen from "./screens/mentor/MentorChatScreen";
+import { StatusBar } from "expo-status-bar";
 
 const Stack = createStackNavigator();
 
@@ -55,6 +56,7 @@ const toastConfig = {
 
 const AppNavigator = () => {
   const { isAuthenticated, role, isLoading } = useAuth();
+
   if (isLoading) {
     return (
       <View
@@ -71,39 +73,44 @@ const AppNavigator = () => {
   }
 
   return (
-    <Stack.Navigator
-      screenOptions={{ headerShown: false, animation: "slide_from_right" }}
-    >
-      {isAuthenticated && role === UserType.Mentor ? (
-        <>
-          <Stack.Screen name="Main" component={MentorTabNavigator} />
-        </>
-      ) : isAuthenticated && role === UserType.Mentee ? (
-        <>
-          <Stack.Screen name="Main" component={MenteeTabNavigator} />
-          <Stack.Screen name="AIAssistant" component={AiAssistantScreen} />
-        </>
-      ) : !isAuthenticated || role == null ? (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-        </>
-      ) : (
-        <></>
-      )}
+    <>
+      {/* StatusBar'ı Burada Ayarlıyoruz */}
+      <StatusBar style="light" backgroundColor="#121212" />
 
-      {/* Ortak Ekranlar */}
+      <Stack.Navigator
+        screenOptions={{ headerShown: false, animation: "slide_from_right" }}
+      >
+        {isAuthenticated && role === UserType.Mentor ? (
+          <>
+            <Stack.Screen name="Main" component={MentorTabNavigator} />
+          </>
+        ) : isAuthenticated && role === UserType.Mentee ? (
+          <>
+            <Stack.Screen name="Main" component={MenteeTabNavigator} />
+            <Stack.Screen name="AIAssistant" component={AiAssistantScreen} />
+          </>
+        ) : !isAuthenticated || role == null ? (
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        ) : (
+          <></>
+        )}
 
-      <Stack.Screen name="Mentor" component={MentorProfileScreen} />
-      <Stack.Screen name="Mentee" component={MenteeProfileScreen} />
-      <Stack.Screen name="MentorMatch" component={MentorMatchScreen} />
-      <Stack.Screen name="MenteeMatch" component={MenteeMatchScreen} />
-      <Stack.Screen name="MenteeChat" component={MenteeChatScreen} />
-      <Stack.Screen name="MentorChat" component={MentorChatScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="AIChat" component={AiChatScreen} />
-    </Stack.Navigator>
+        {/* Ortak Ekranlar */}
+
+        <Stack.Screen name="Mentor" component={MentorProfileScreen} />
+        <Stack.Screen name="Mentee" component={MenteeProfileScreen} />
+        <Stack.Screen name="MentorMatch" component={MentorMatchScreen} />
+        <Stack.Screen name="MenteeMatch" component={MenteeMatchScreen} />
+        <Stack.Screen name="MenteeChat" component={MenteeChatScreen} />
+        <Stack.Screen name="MentorChat" component={MentorChatScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="AIChat" component={AiChatScreen} />
+      </Stack.Navigator>
+    </>
   );
 };
 
