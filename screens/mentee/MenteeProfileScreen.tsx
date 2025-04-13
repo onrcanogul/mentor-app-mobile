@@ -7,7 +7,7 @@ import ContactEditModal from "../../components/mentee/profile/modals/ContactEdit
 import CategoryEditModal from "../../components/mentee/profile/modals/CategoryEditModal";
 import GoalsEditModal from "../../components/mentee/profile/modals/GoalEditModal";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
-import CategoryList from "../../components/mentor/profile/CategoryList";
+import CategoryList from "../../components/mentee/profile/CategorySelection";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
@@ -173,7 +173,7 @@ const MenteeProfileScreen = () => {
             />
             <CategoryEditModal
               visible={categoryModalVisible}
-              categories={mentee?.user.categories ?? []}
+              categories={categories}
               onClose={() => setCategoryModalVisible(false)}
               onSave={async (updated) => {
                 setCategories(updated);

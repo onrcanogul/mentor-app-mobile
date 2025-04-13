@@ -80,7 +80,7 @@ const MentorProfileScreen = () => {
       setEducations(fetchedMentor.educations || []);
       setSkills(fetchedMentor.skills || []);
       setExperiences(fetchedMentor.experiences || []);
-      setCategories(fetchedMentor.user.categories || []);
+      setCategories(fetchedMentor.user.categories);
     }
     setLoading(false);
   };

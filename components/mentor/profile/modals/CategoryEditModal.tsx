@@ -103,6 +103,7 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
         user.id,
         selected
       );
+      console.log(response);
       if (response === true) {
         toastrService.success(t("categorySaveSuccess"));
         onSave(selected);
