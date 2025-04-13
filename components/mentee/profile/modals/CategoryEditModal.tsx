@@ -23,6 +23,7 @@ import userService from "../../../../services/user-service";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import mentorService from "../../../../services/mentor-service";
 
 interface CategoryEditModalProps {
   visible: boolean;

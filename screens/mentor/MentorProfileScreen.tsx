@@ -11,7 +11,6 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useTheme } from "../../contexts/ThemeContext";
-import { LinearGradient } from "expo-linear-gradient";
 import userService from "../../services/user-service";
 import { Mentor } from "../../domain/mentor";
 import { Badge } from "../../domain/badge";

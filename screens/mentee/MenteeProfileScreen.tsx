@@ -19,7 +19,6 @@ import { Mentee } from "../../domain/mentee";
 import { Contact } from "../../domain/contact";
 import LoadingSpinner from "../../utils/spinner";
 import ProfileCard from "../../components/common/ProfileCard";
-import Animated, { FadeInDown } from "react-native-reanimated";
 
 const MenteeProfileScreen = () => {
   const { t } = useTranslation();
