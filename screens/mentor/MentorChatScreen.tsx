@@ -21,9 +21,7 @@ import Reanimated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-  interpolate,
   withSequence,
-  withTiming,
 } from "react-native-reanimated";
 
 import { useChatSocket } from "../../hooks/useChatSocket";
@@ -160,6 +158,157 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const { theme } = useTheme();
   const sendButtonScale = useSharedValue(1);
 
+  const [chat, setChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [chatEnded, setChatEnded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const flatListRef = useRef<FlatList<MessageGroup>>(null);
+
+  useEffect(() => {
+    loadChat();
+  }, [chatId]);
+
+  const loadChat = async () => {
+    try {
+      const response = await chatService.getById(
+        chatId,
+        () => {},
+        () => {}
+      );
+      if (response) {
+        setChat(response);
+        setMessages(response.messages);
+        setChatEnded(response.status === ChatStatus.Closed);
+
+        const currentUser = await userService.getCurrentUser();
+        setCurrentUserId(currentUser.id);
+      }
+    } catch (error) {
+      console.error("Chat verisi çekilemedi", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      chatId,
+      senderId,
+      content: message,
+      createdDate: new Date(),
+      isRead: false,
+      createdBy: "SYSTEM",
+      isDeleted: false,
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  });
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !chat) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      chatId,
+      senderId: currentUserId,
+      content: inputText.trim(),
+      createdDate: new Date(),
+      isRead: false,
+      createdBy: currentUserId,
+      isDeleted: false,
+    };
+
+    try {
+      sendMessage(currentUserId, inputText.trim());
+      setMessages((prev) => [...prev, newMessage]);
+      setInputText("");
+
+      sendButtonScale.value = withSequence(
+        withSpring(1.2, { damping: 2 }),
+        withSpring(1, { damping: 2 })
+      );
+
+      await messageService.create(
+        newMessage,
+        () => {},
+        () => {}
+      );
+    } catch (error) {
+      console.error("Mesaj gönderilemedi", error);
+      toastrService.error(t("messageNotSent"));
+    }
+  };
+
+  const handleEndChat = async () => {
+    if (!chat) return;
+
+    try {
+      await chatService.update(
+        {
+          ...chat,
+          status: ChatStatus.Closed,
+        },
+        () => {},
+        () => {}
+      );
+      setChatEnded(true);
+      toastrService.success(t("chatEnded"));
+    } catch (error) {
+      console.error("Sohbet sonlandırılamadı", error);
+      toastrService.error(t("chatNotEnded"));
+    }
+  };
+
+  const sendButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: sendButtonScale.value }],
+    };
+  });
+
+  const groupedMessages = useMemo(() => {
+    const groups: MessageGroup[] = [];
+
+    messages.forEach((message) => {
+      const messageDate = new Date(message.createdDate);
+      const dateString = messageDate.toDateString();
+
+      const existingGroup = groups.find(
+        (g) => new Date(g.date).toDateString() === dateString
+      );
+
+      if (existingGroup) {
+        existingGroup.data.push(message);
+      } else {
+        groups.push({
+          date: messageDate.toISOString(),
+          data: [message],
+        });
+      }
+    });
+
+    return groups.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  }, [messages]);
+
+  const renderItem = ({ item, index }: { item: Message; index: number }) => {
+    const isMe = item.senderId === currentUserId;
+    return <MessageItem item={item} isMe={isMe} />;
+  };
+
+  const renderDateSeparator = ({ date }: { date: string }) => {
+    return <DateSeparator date={new Date(date)} />;
+  };
+
+  if (isLoading || !chat || !chat.match) {
+    return <LoadingSpinner visible={true} />;
+  }
+
+  const otherUser = chat.match.sender;
+
   const styles = StyleSheet.create({
     safeContainer: {
       flex: 1,
@@ -182,7 +331,7 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       height: 40,
       borderRadius: 20,
       marginRight: theme.spacing.m,
-    } as const,
+    },
     username: {
       color: theme.colors.text.primary,
       fontSize: 18,
@@ -243,137 +392,6 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     },
   });
 
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [currentUserId, setCurrentUserId] = useState("");
-  const [chatEnded, setChatEnded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const flatListRef = useRef<FlatList<MessageGroup>>(null);
-
-  useEffect(() => {
-    const fetchChat = async () => {
-      try {
-        const response = await chatService.getById(
-          chatId,
-          () => {},
-          () => {}
-        );
-        if (response) {
-          setChat(response);
-          setMessages(response.messages);
-          setChatEnded(response.status === ChatStatus.Closed);
-
-          const currentUser = await userService.getCurrentUser();
-          setCurrentUserId(currentUser.id);
-        }
-      } catch (error) {
-        console.error("Chat verisi çekilemedi", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChat();
-  }, [chatId]);
-
-  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      chatId,
-      senderId,
-      content: message,
-      createdDate: new Date(),
-      isRead: false,
-      createdBy: "SYSTEM",
-      isDeleted: false,
-    };
-    setMessages((prev) => [...prev, newMessage]);
-  });
-
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || !currentUserId || chatEnded) return;
-
-    sendButtonScale.value = withSequence(withSpring(0.8), withSpring(1));
-
-    const newMsg: Message = {
-      chatId,
-      senderId: currentUserId,
-      content: inputText,
-      createdDate: new Date(),
-      isRead: false,
-      createdBy: "SYSTEM",
-      isDeleted: false,
-    };
-
-    setInputText("");
-    await sendMessage(currentUserId, inputText);
-    await messageService.create(
-      newMsg,
-      () => {},
-      () => console.warn("Mesaj DB'ye yazılamadı")
-    );
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-  };
-
-  const handleEndChat = async () => {
-    const result = await chatService.close(chatId);
-    if (result === true) {
-      toastrService.success(t("endChatSuccess"));
-      setChatEnded(true);
-    } else {
-      toastrService.error(t("endChatError"));
-    }
-  };
-
-  const sendButtonStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: sendButtonScale.value }],
-    };
-  });
-
-  const groupedMessages = useMemo(() => {
-    const groups: MessageGroup[] = [];
-
-    messages.forEach((message) => {
-      const messageDate = new Date(message.createdDate);
-      const dateString = messageDate.toDateString();
-
-      const existingGroup = groups.find(
-        (g) => new Date(g.date).toDateString() === dateString
-      );
-
-      if (existingGroup) {
-        existingGroup.data.push(message);
-      } else {
-        groups.push({
-          date: messageDate.toISOString(),
-          data: [message],
-        });
-      }
-    });
-
-    return groups.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  }, [messages]);
-
-  const renderItem = ({ item, index }: { item: Message; index: number }) => {
-    const isMe = item.senderId === currentUserId;
-    return <MessageItem item={item} isMe={isMe} />;
-  };
-
-  const renderDateSeparator = ({ date }: { date: string }) => {
-    return <DateSeparator date={new Date(date)} />;
-  };
-
-  if (isLoading || !chat) {
-    return <LoadingSpinner visible={true} />;
-  }
-
-  const userInfo = chat.match.sender;
-
   return (
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
@@ -383,11 +401,11 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       >
         <Reanimated.View entering={FadeIn} style={styles.header}>
           <Image
-            source={{ uri: userInfo.imageUrl || "https://placehold.co/40x40" }}
+            source={{ uri: otherUser.imageUrl || "https://placehold.co/40x40" }}
             style={styles.avatar}
           />
           <Text style={styles.username}>
-            {userInfo.username ?? "Kullanıcı"}
+            {otherUser.username ?? "Kullanıcı"}
           </Text>
 
           {messages.length >= 10 && !chatEnded && (

@@ -13,7 +13,10 @@ import { BlurView, BlurTint } from "expo-blur";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
-import { defaultTheme } from "../../theme/defaultTheme";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface ProfileCardProps {
   username: string;
@@ -38,13 +41,36 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const CardBackground = Platform.OS === "ios" ? BlurView : View;
+  const cardProps =
+    Platform.OS === "ios"
+      ? {
+          intensity: 40,
+          tint: "dark" as BlurTint,
+        }
+      : {
+          style: {
+            backgroundColor: theme.colors.background.secondary,
+          },
+        };
+
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[theme.colors.primary.main, theme.colors.primary.dark]}
+    <AnimatedView
+      entering={FadeIn}
+      style={[styles.container, { backgroundColor: "transparent" }]}
+    >
+      <AnimatedLinearGradient
+        entering={FadeInDown}
+        colors={[
+          theme.colors.primary.main,
+          `${theme.colors.primary.main}80`,
+          `${theme.colors.primary.main}40`,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
       />
-      <View style={styles.card}>
+      <CardBackground {...cardProps} style={styles.card}>
         <View style={styles.content}>
           <TouchableOpacity
             onPress={isOwn ? onImagePress : undefined}
@@ -56,14 +82,22 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                   ? { uri: imageUrl }
                   : require("../../assets/ai-icon.png")
               }
-              style={styles.profileImage}
+              style={[
+                styles.profileImage,
+                { borderColor: theme.colors.primary.main },
+              ]}
             />
             {isOwn && (
-              <View style={styles.editBadge}>
+              <View
+                style={[
+                  styles.editBadge,
+                  { backgroundColor: theme.colors.background.secondary },
+                ]}
+              >
                 <IconButton
                   icon="camera"
                   size={16}
-                  iconColor={theme.colors.text.primary}
+                  iconColor={theme.colors.primary.main}
                 />
               </View>
             )}
@@ -71,17 +105,27 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
           <View style={styles.infoContainer}>
             <Text
+              variant="headlineMedium"
               style={[styles.username, { color: theme.colors.text.primary }]}
             >
               {username}
             </Text>
             <Text
+              variant="bodyMedium"
               style={[styles.email, { color: theme.colors.text.secondary }]}
             >
               {email}
             </Text>
-            <View style={styles.roleContainer}>
-              <Text style={[styles.role, { color: theme.colors.primary.main }]}>
+            <View
+              style={[
+                styles.roleContainer,
+                { backgroundColor: `${theme.colors.primary.main}15` },
+              ]}
+            >
+              <Text
+                variant="labelLarge"
+                style={[styles.role, { color: theme.colors.primary.main }]}
+              >
                 {role}
               </Text>
             </View>
@@ -100,14 +144,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
               <IconButton
                 icon="logout"
                 size={24}
-                iconColor={theme.colors.text.secondary}
+                iconColor={theme.colors.error.main}
                 onPress={onLogoutPress}
               />
             </View>
           )}
         </View>
-      </View>
-    </View>
+      </CardBackground>
+    </AnimatedView>
   );
 };
 
@@ -116,22 +160,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 24,
-    backgroundColor: "transparent",
   },
   headerGradient: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: 100,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    zIndex: 1,
+    height: 120,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    opacity: 0.8,
   },
   card: {
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    zIndex: 2,
+    borderRadius: 24,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000000",
@@ -144,14 +186,11 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 8,
-        overflow: "hidden",
       },
     }),
   },
   content: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    padding: 24,
   },
   imageContainer: {
     position: "relative",
@@ -159,22 +198,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
   },
   editBadge: {
     position: "absolute",
-    right: 0,
-    bottom: 0,
-    borderRadius: 15,
-    width: 30,
-    height: 30,
+    right: -4,
+    bottom: -4,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -194,28 +231,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   username: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 4,
   },
   email: {
-    fontSize: 14,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   roleContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   role: {
-    fontSize: 14,
     fontWeight: "600",
   },
   actions: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 16,
+    gap: 8,
   },
 });
 
