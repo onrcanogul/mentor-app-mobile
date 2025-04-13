@@ -3,11 +3,11 @@ import { Chat } from "./chat";
 import { User } from "./user";
 
 export interface Match extends BaseEntity {
-  experiencedUserId: string;
-  inExperiencedUserId: string;
-  status: any;
-  experiencedUser: User;
-  inexperiencedUser: User;
+  receiverId: string;
+  senderId: string;
+  status: MatchStatus;
+  receiver: User;
+  sender: User;
   chat?: Chat;
 }
 

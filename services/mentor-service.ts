@@ -68,6 +68,18 @@ class MentorService {
       toastrService.error(i18n.t(error.response.data.errors[0]));
     }
   }
+
+  async saveCategories(userId: string, categories: Category[]) {
+    try {
+      const response: ServiceResponse<NoContent> = (
+        await api.post(`${this.endpoint}/categories/${userId}`, categories)
+      ).data;
+      return response.isSuccessful;
+    } catch (error: any) {
+      toastrService.error(i18n.t(error.response.data.errors[0]));
+      return false;
+    }
+  }
 }
 
 export default new MentorService();

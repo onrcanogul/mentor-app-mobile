@@ -1,114 +1,155 @@
 import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
-import SearchBar from "../../components/mentor/match/SearchBar";
-import MatchSection from "../../components/mentor/match/MatchSection";
+import MatchSection from "../../components/mentee/match/MatchSection";
 import { Match, MatchStatus } from "../../domain/match";
-import { useTranslation } from "react-i18next";
-import matchService from "../../services/match-service";
-import { useFocusEffect } from "@react-navigation/native";
 import userService from "../../services/user-service";
+import matchService from "../../services/match-service";
+import { useTranslation } from "react-i18next";
+import { RefreshControl } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
+import Animated, { FadeIn, FadeInDown, Layout } from "react-native-reanimated";
+
+const { width } = Dimensions.get("window");
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const MentorMatchScreen = () => {
   const { t } = useTranslation();
-  const [isLoading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showActiveMatches, setShowActiveMatches] = useState(true);
-  const [showWaitingMatches, setShowWaitingMatches] = useState(true);
-  const [showPastMatches, setShowPastMatches] = useState(false);
-
+  const { theme } = useTheme();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showActive, setShowActive] = useState(true);
+  const [showWaiting, setShowWaiting] = useState(true);
+  const [showPast, setShowPast] = useState(false);
+  const [isLoading, setLoading] = useState<boolean>(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetch();
-    }, [])
-  );
+  useEffect(() => {
+    fetchMatches();
+  }, []);
 
-  async function fetch() {
-    var matches = await matchService.get(
-      (
-        await userService.getCurrentUser()
-      ).id,
+  async function fetchMatches() {
+    setLoading(true);
+    const user = await userService.getCurrentUser();
+    const result = await matchService.get(
+      user.id,
       () => {},
       () => {}
     );
-    if (matches != null) {
-      setMatches(matches);
-    }
+    setMatches(result);
+    setLoading(false);
   }
 
-  const filtered = matches.filter((match) =>
-    match.experiencedUser.username
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <>
-      <SafeAreaView style={styles.container}>
-        <SearchBar query={searchQuery} setQuery={setSearchQuery} />
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+      edges={["top"]}
+    >
+      <Animated.View
+        entering={FadeInDown.duration(600).springify()}
+        style={styles.searchContainer}
+      >
+        <AnimatedTextInput
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: theme.colors.background.secondary,
+              color: theme.colors.text.primary,
+            },
+          ]}
+          placeholder={t("searchMentee")}
+          placeholderTextColor={theme.colors.text.disabled}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </Animated.View>
 
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={fetch}
-              tintColor="#FFD700"
-            />
-          }
+      <Animated.ScrollView
+        entering={FadeIn.duration(600).delay(200)}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={fetchMatches}
+            tintColor={theme.colors.primary.main}
+          />
+        }
+        style={styles.scrollView}
+      >
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(400).springify()}
         >
           <MatchSection
             title={t("activeMatches")}
-            matches={
-              searchQuery != ""
-                ? matches.filter((m) => m.status === MatchStatus.Accepted)
-                : filtered.filter((m) => m.status === MatchStatus.Accepted)
-            }
-            visible={showActiveMatches}
-            onToggle={() => setShowActiveMatches(!showActiveMatches)}
-            setMatches={setMatches}
+            matches={matches.filter((m) => m.status === MatchStatus.Accepted)}
+            isVisible={showActive}
+            onToggle={() => setShowActive(!showActive)}
             setLoading={setLoading}
             isLoading={isLoading}
           />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(600).springify()}
+        >
           <MatchSection
             title={t("waitingMatches")}
-            matches={
-              searchQuery != ""
-                ? matches.filter((m) => m.status === MatchStatus.Pending)
-                : filtered.filter((m) => m.status === MatchStatus.Pending)
-            }
-            visible={showWaitingMatches}
-            onToggle={() => setShowWaitingMatches(!showWaitingMatches)}
-            setMatches={setMatches}
+            matches={matches.filter((m) => m.status === MatchStatus.Pending)}
+            isVisible={showWaiting}
+            onToggle={() => setShowWaiting(!showWaiting)}
             setLoading={setLoading}
             isLoading={isLoading}
           />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(800).springify()}
+        >
           <MatchSection
             title={t("pastMatches")}
-            matches={
-              searchQuery != ""
-                ? matches.filter((m) => m.status === MatchStatus.Rejected)
-                : filtered.filter((m) => m.status === MatchStatus.Rejected)
-            }
-            visible={showPastMatches}
-            onToggle={() => setShowPastMatches(!showPastMatches)}
-            setMatches={setMatches}
+            matches={matches.filter((m) => m.status === MatchStatus.Rejected)}
+            isVisible={showPast}
+            onToggle={() => setShowPast(!showPast)}
             setLoading={setLoading}
             isLoading={isLoading}
           />
-        </ScrollView>
-      </SafeAreaView>
-      {/* <LoadingSpinner visible={isLoading} /> */}
-    </>
+        </Animated.View>
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
     padding: 20,
+  },
+  searchContainer: {
+    marginBottom: 20,
+  },
+  searchInput: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  scrollView: {
+    flex: 1,
   },
 });
 

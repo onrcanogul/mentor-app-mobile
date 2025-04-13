@@ -25,12 +25,11 @@ const ChatCard = ({ item, currentUserId }: ChatCardProps) => {
   const navigation = useNavigation();
   if (!item.match || !currentUserId) return null;
 
-  const isCurrentUserExperienced =
-    currentUserId === item.match.experiencedUserId;
+  const isCurrentUserExperienced = currentUserId === item.match.receiverId;
 
   const otherUser = isCurrentUserExperienced
-    ? item.match.inexperiencedUser
-    : item.match.experiencedUser;
+    ? item.match.sender
+    : item.match.receiver;
 
   return (
     <TouchableOpacity

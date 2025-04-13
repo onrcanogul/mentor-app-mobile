@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
+import Reanimated, {
+  FadeInRight,
+  FadeInLeft,
+  FadeIn,
+  SlideInDown,
+  useAnimatedStyle,
+  withSpring,
+  useSharedValue,
+  interpolate,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { useChatSocket } from "../../hooks/useChatSocket";
 import messageService from "../../services/message-service";
@@ -21,8 +34,14 @@ import toastrService from "../../services/toastr-service";
 
 import { Message } from "../../domain/message";
 import { Chat, ChatStatus } from "../../domain/chat";
-import { formatDate } from "../../utils/dateFormatter";
+import {
+  formatDate,
+  formatMessageTime,
+  formatDayForChat,
+} from "../../utils/dateFormatter";
 import LoadingSpinner from "../../utils/spinner";
+
+const AnimatedTouchable = Reanimated.createAnimatedComponent(TouchableOpacity);
 
 interface ChatScreenProps {
   route: {
@@ -32,9 +51,197 @@ interface ChatScreenProps {
   };
 }
 
+interface MessageGroup {
+  date: string;
+  data: Message[];
+}
+
+const MessageItem = React.memo(
+  ({ item, isMe }: { item: Message; isMe: boolean }) => {
+    const { theme } = useTheme();
+
+    const styles = StyleSheet.create({
+      messageWrapper: {
+        marginVertical: theme.spacing.xs,
+        marginHorizontal: theme.spacing.s,
+        maxWidth: "85%",
+      },
+      messageContainer: {
+        padding: theme.spacing.m,
+        borderRadius: theme.borderRadius.large,
+        backgroundColor: theme.colors.background.secondary,
+      },
+      myMessage: {
+        alignSelf: "flex-end",
+        backgroundColor: theme.colors.primary.light,
+        borderBottomRightRadius: theme.spacing.xs,
+      },
+      otherMessage: {
+        alignSelf: "flex-start",
+        backgroundColor: theme.colors.background.tertiary,
+        borderBottomLeftRadius: theme.spacing.xs,
+      },
+      messageText: {
+        color: theme.colors.text.primary,
+        fontSize: 16,
+        lineHeight: 22,
+        letterSpacing: 0.3,
+        marginBottom: theme.spacing.xs,
+        fontWeight: "400",
+      },
+      messageTime: {
+        color: theme.colors.text.secondary,
+        fontSize: 11,
+        alignSelf: "flex-end",
+        opacity: 0.8,
+        marginTop: 4,
+      },
+    });
+
+    return (
+      <Reanimated.View
+        entering={isMe ? FadeInRight.springify() : FadeInLeft.springify()}
+        style={[
+          styles.messageWrapper,
+          isMe ? { alignSelf: "flex-end" } : { alignSelf: "flex-start" },
+        ]}
+      >
+        <View
+          style={[
+            styles.messageContainer,
+            isMe ? styles.myMessage : styles.otherMessage,
+          ]}
+        >
+          <Text style={styles.messageText}>{item.content}</Text>
+          <Text style={styles.messageTime}>
+            {formatMessageTime(item.createdDate)}
+          </Text>
+        </View>
+      </Reanimated.View>
+    );
+  }
+);
+
+const DateSeparator = ({ date }: { date: Date }) => {
+  const { theme } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: theme.spacing.m,
+      paddingHorizontal: theme.spacing.m,
+    },
+    line: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.background.secondary,
+    },
+    dateText: {
+      color: theme.colors.text.secondary,
+      fontSize: 12,
+      marginHorizontal: theme.spacing.m,
+      fontWeight: "500",
+    },
+  });
+
+  return (
+    <Reanimated.View entering={FadeIn} style={styles.container}>
+      <View style={styles.line} />
+      <Text style={styles.dateText}>{formatDayForChat(date)}</Text>
+      <View style={styles.line} />
+    </Reanimated.View>
+  );
+};
+
 const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const { chatId } = route.params;
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const sendButtonScale = useSharedValue(1);
+
+  const styles = StyleSheet.create({
+    safeContainer: {
+      flex: 1,
+      backgroundColor: theme.colors.background.primary,
+    },
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.m,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.background.secondary,
+      backgroundColor: theme.colors.background.primary,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: theme.spacing.m,
+    } as const,
+    username: {
+      color: theme.colors.text.primary,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    endChatButton: {
+      marginLeft: "auto",
+      paddingVertical: theme.spacing.s,
+      paddingHorizontal: theme.spacing.m,
+      backgroundColor: theme.colors.error.main,
+      borderRadius: theme.borderRadius.small,
+    },
+    endChatText: {
+      color: theme.colors.text.primary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+      alignItems: "center",
+      borderTopWidth: 1,
+      borderColor: theme.colors.background.secondary,
+      backgroundColor: theme.colors.background.primary,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: theme.colors.background.secondary,
+      color: theme.colors.text.primary,
+      padding: theme.spacing.m,
+      borderRadius: theme.borderRadius.large,
+      fontSize: 16,
+      minHeight: 45,
+    },
+    sendButton: {
+      marginLeft: theme.spacing.m,
+      backgroundColor: theme.colors.primary.main,
+      width: 45,
+      height: 45,
+      borderRadius: 22.5,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    sendText: {
+      color: theme.colors.text.primary,
+      fontSize: 20,
+    },
+    chatEndedText: {
+      color: theme.colors.text.secondary,
+      fontSize: 14,
+      textAlign: "center",
+      marginVertical: theme.spacing.m,
+      backgroundColor: theme.colors.background.secondary,
+      padding: theme.spacing.m,
+      borderRadius: theme.borderRadius.medium,
+      marginHorizontal: theme.spacing.m,
+    },
+  });
 
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,7 +250,7 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const [chatEnded, setChatEnded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const flatListRef = useRef<FlatList<Message>>(null);
+  const flatListRef = useRef<FlatList<MessageGroup>>(null);
 
   useEffect(() => {
     const fetchChat = async () => {
@@ -88,6 +295,8 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const handleSendMessage = async () => {
     if (!inputText.trim() || !currentUserId || chatEnded) return;
 
+    sendButtonScale.value = withSequence(withSpring(0.8), withSpring(1));
+
     const newMsg: Message = {
       chatId,
       senderId: currentUserId,
@@ -118,36 +327,61 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
-    const isMe = item.senderId === currentUserId;
-    return (
-      <View style={styles.messageWrapper}>
-        <View
-          style={[
-            styles.messageContainer,
-            isMe ? styles.myMessage : styles.otherMessage,
-          ]}
-        >
-          <Text style={styles.messageText}>{item.content}</Text>
-          <Text style={styles.messageTime}>{formatDate(item.createdDate)}</Text>
-        </View>
-      </View>
+  const sendButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: sendButtonScale.value }],
+    };
+  });
+
+  const groupedMessages = useMemo(() => {
+    const groups: MessageGroup[] = [];
+
+    messages.forEach((message) => {
+      const messageDate = new Date(message.createdDate);
+      const dateString = messageDate.toDateString();
+
+      const existingGroup = groups.find(
+        (g) => new Date(g.date).toDateString() === dateString
+      );
+
+      if (existingGroup) {
+        existingGroup.data.push(message);
+      } else {
+        groups.push({
+          date: messageDate.toISOString(),
+          data: [message],
+        });
+      }
+    });
+
+    return groups.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
+  }, [messages]);
+
+  const renderItem = ({ item, index }: { item: Message; index: number }) => {
+    const isMe = item.senderId === currentUserId;
+    return <MessageItem item={item} isMe={isMe} />;
+  };
+
+  const renderDateSeparator = ({ date }: { date: string }) => {
+    return <DateSeparator date={new Date(date)} />;
   };
 
   if (isLoading || !chat) {
     return <LoadingSpinner visible={true} />;
   }
 
-  const userInfo = chat.match.inexperiencedUser;
+  const userInfo = chat.match.sender;
 
   return (
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
-        <View style={styles.header}>
+        <Reanimated.View entering={FadeIn} style={styles.header}>
           <Image
             source={{ uri: userInfo.imageUrl || "https://placehold.co/40x40" }}
             style={styles.avatar}
@@ -157,46 +391,62 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
           </Text>
 
           {messages.length >= 10 && !chatEnded && (
-            <TouchableOpacity
+            <AnimatedTouchable
+              entering={FadeIn.delay(500)}
               style={styles.endChatButton}
               onPress={handleEndChat}
             >
               <Text style={styles.endChatText}>{t("endChat")}</Text>
-            </TouchableOpacity>
+            </AnimatedTouchable>
           )}
-        </View>
+        </Reanimated.View>
 
-        <FlatList
+        <FlatList<MessageGroup>
           ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id!}
-          renderItem={renderMessage}
+          data={groupedMessages}
+          keyExtractor={(item) => item.date}
+          renderItem={({ item }) => (
+            <>
+              {renderDateSeparator({ date: item.date })}
+              {item.data.map((message, index) => (
+                <React.Fragment key={message.id}>
+                  {renderItem({ item: message, index })}
+                </React.Fragment>
+              ))}
+            </>
+          )}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: true })
           }
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          contentContainerStyle={{ paddingVertical: theme.spacing.m }}
+          showsVerticalScrollIndicator={false}
         />
 
         {chatEnded && (
-          <Text style={styles.chatEndedText}>{t("chatHasEnded")}</Text>
+          <Reanimated.Text entering={FadeIn} style={styles.chatEndedText}>
+            {t("chatHasEnded")}
+          </Reanimated.Text>
         )}
 
         {!chatEnded && (
-          <View style={styles.inputContainer}>
+          <Reanimated.View entering={SlideInDown} style={styles.inputContainer}>
             <TextInput
               value={inputText}
               onChangeText={setInputText}
               style={styles.input}
               placeholder={t("writeMessage")}
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor={theme.colors.text.secondary}
+              multiline
+              numberOfLines={1}
             />
-            <TouchableOpacity
+            <AnimatedTouchable
               onPress={handleSendMessage}
-              style={styles.sendButton}
+              style={[styles.sendButton, sendButtonStyle]}
             >
               <Text style={styles.sendText}>➤</Text>
-            </TouchableOpacity>
-          </View>
+            </AnimatedTouchable>
+          </Reanimated.View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -204,69 +454,3 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
 };
 
 export default MentorChatScreen;
-
-const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: "#121212" },
-  container: { flex: 1, padding: 10 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E1E1E",
-    marginBottom: 10,
-  },
-  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
-  username: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-  endChatButton: {
-    marginLeft: "auto",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#C62828",
-    borderRadius: 8,
-  },
-  endChatText: { color: "#FFFFFF", fontSize: 12, fontWeight: "600" },
-  messageWrapper: { marginVertical: 1 },
-  messageContainer: {
-    maxWidth: "80%",
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
-  },
-  myMessage: { alignSelf: "flex-end", backgroundColor: "#075E54" },
-  otherMessage: { alignSelf: "flex-start", backgroundColor: "#1E1E1E" },
-  messageText: { color: "#FFFFFF", fontSize: 16 },
-  messageTime: {
-    color: "#A0A0A0",
-    fontSize: 12,
-    alignSelf: "flex-end",
-    marginTop: 5,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    padding: 10,
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#1E1E1E",
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#1E1E1E",
-    color: "#FFFFFF",
-    padding: 10,
-    borderRadius: 20,
-  },
-  sendButton: {
-    marginLeft: 10,
-    backgroundColor: "#075E54",
-    padding: 10,
-    borderRadius: 20,
-  },
-  sendText: { color: "#FFFFFF", fontSize: 18 },
-  chatEndedText: {
-    color: "#AAAAAA",
-    fontSize: 14,
-    textAlign: "center",
-    marginVertical: 10,
-  },
-});

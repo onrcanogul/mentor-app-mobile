@@ -4,9 +4,10 @@ import { Skill } from "./skill";
 export interface Experience extends BaseEntity {
   title: string;
   company?: string;
-  StartDate: Date;
-  EndDate: Date;
+  startDate: Date;
+  endDate: Date | null;
   location: string;
   description?: string;
-  skills: Skill[];
+  skills?: Skill[];
+  isCurrentPosition?: boolean;
 }

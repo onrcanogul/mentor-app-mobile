@@ -10,6 +10,7 @@ import i18n from "../i18n";
 interface DecodedToken {
   name: string;
   role: string;
+  email: string;
   exp: number;
   Id: string;
 }
@@ -54,7 +55,7 @@ class UserService {
             ? "Mentor"
             : dto.role === UserType.Mentee
             ? "Mentee"
-            : ""
+            : "General"
         );
 
         successCallback();
@@ -140,9 +141,10 @@ class UserService {
       const decoded: DecodedToken = jwtDecode(token);
       return {
         id: decoded.Id,
-        email: "onurcan@gmail.com",
+        email: decoded.email,
         username: decoded.name,
         role: decoded.role,
+        imageUrl: "",
       };
     } catch (error) {
       console.error("Token çözümlenemedi:", error);

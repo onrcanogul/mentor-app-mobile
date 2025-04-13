@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Modal, BackHandler, Platform } from "react-native";
-import { Text, Button } from "react-native-paper";
-import DropDownPicker from "react-native-dropdown-picker";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, TextInput, IconButton } from "react-native-paper";
 import { Category } from "../../../../domain/category";
-import categoryService from "../../../../services/category-service";
-import toastrService from "../../../../services/toastr-service";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import BaseEditModal from "../../../common/BaseEditModal";
 import mentorService from "../../../../services/mentor-service";
-import changeNavigationBarColor from "react-native-navigation-bar-color";
 import userService from "../../../../services/user-service";
+import toastrService from "../../../../services/toastr-service";
 import { useTranslation } from "react-i18next";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface CategoryEditModalProps {
   visible: boolean;
   categories: Category[];
   onClose: () => void;
-  onSave: (updatedCategories: Category[]) => void;
+  onSave: (updated: Category[]) => void;
 }
 
 const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
@@ -24,158 +24,151 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation();
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [open, setOpen] = useState(false);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [dropdownItems, setDropdownItems] = useState<any[]>([]);
+  const { theme } = useTheme();
+  const [editedCategories, setEditedCategories] = useState<Category[]>([]);
+  const [newCategory, setNewCategory] = useState("");
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const response = await categoryService.get(
-        () => {},
-        () => {}
-      );
-      setAllCategories(response);
-      setDropdownItems(
-        response.map((cat) => ({
-          label: t(`${cat.localizationCode}`),
-          value: cat.id,
-        }))
-      );
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    setSelectedCategoryIds(categories.map((c) => c.id!));
+    setEditedCategories(categories);
   }, [categories]);
 
-  const handleSave = async () => {
-    const selected = allCategories.filter((cat) =>
-      selectedCategoryIds.includes(cat.id!)
-    );
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return;
 
-    const response: boolean | undefined = await mentorService.addCategory(
-      (
-        await userService.getCurrentUser()
-      ).id,
-      selected
-    );
-    if (response === true) {
-      toastrService.success(t("categoryAddSuccess"));
-      onSave(selected);
-    } else {
-      toastrService.error(t("categoryAddError"));
-    }
+    const category: Category = {
+      id: Date.now().toString(),
+      name: newCategory.trim(),
+      createdBy: "USER",
+    };
 
-    onClose();
+    setEditedCategories([...editedCategories, category]);
+    setNewCategory("");
   };
 
-  // ✅ Android geri tuşu desteği
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (visible) {
-          onClose();
-          return true;
-        }
-        return false;
-      }
-    );
+  const handleDeleteCategory = (index: number) => {
+    const updated = [...editedCategories];
+    updated.splice(index, 1);
+    setEditedCategories(updated);
+  };
 
-    return () => backHandler.remove();
-  }, [visible]);
+  const handleSave = async () => {
+    const userId = (await userService.getCurrentUser()).id;
+    const result = await mentorService.saveCategories(userId, editedCategories);
 
-  // ✅ Navigation bar rengi ayarla
-  useEffect(() => {
-    if (visible && Platform.OS === "android") {
-      // changeNavigationBarColor("#121212", false);
+    if (result) {
+      toastrService.success(t("categorySaveSuccess"));
+      onSave(editedCategories);
+      onClose();
+    } else {
+      toastrService.error(t("categorySaveError"));
     }
-  }, [visible]);
+  };
 
   return (
-    <Modal
+    <BaseEditModal
       visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
+      onClose={onClose}
+      title={t("editCategories")}
+      onSave={handleSave}
+      saveDisabled={editedCategories.length === 0}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>{t("categoryEditTitle")}</Text>
-
-          <DropDownPicker
-            multiple={true}
-            min={0}
-            max={10}
-            searchable={true}
-            searchPlaceholder={t("searchCategory")}
-            placeholder={t("selectCategory")}
-            placeholderStyle={{ color: "#FFFFFF" }}
-            open={open}
-            setOpen={setOpen}
-            value={selectedCategoryIds}
-            setValue={setSelectedCategoryIds}
-            items={dropdownItems}
-            setItems={setDropdownItems}
-            mode="BADGE"
-            badgeDotColors={["#FFD700", "#00FF99", "#FF6B6B"]}
-            badgeTextStyle={{ color: "#FFFFFF" }}
-            style={{
-              backgroundColor: "#2C2C2C",
-              borderColor: "#444",
-              zIndex: 1000,
-            }}
-            dropDownContainerStyle={{
-              backgroundColor: "#2C2C2C",
-              borderColor: "#444",
-            }}
-            listItemLabelStyle={{ color: "#FFFFFF" }}
-            searchTextInputStyle={{
-              backgroundColor: "#1E1E1E",
-              color: "#FFFFFF",
-            }}
+      <View style={styles.container}>
+        <View style={styles.addSection}>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: theme.colors.input.background },
+            ]}
+            placeholder={t("enterCategoryName")}
+            placeholderTextColor={theme.colors.input.placeholder}
+            value={newCategory}
+            onChangeText={setNewCategory}
+            onSubmitEditing={handleAddCategory}
+            returnKeyType="done"
           />
+          <TouchableOpacity
+            style={[
+              styles.addButton,
+              { backgroundColor: theme.colors.primary.main },
+            ]}
+            onPress={handleAddCategory}
+          >
+            <Text style={styles.addButtonText}>{t("add")}</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.actions}>
-            <Button onPress={onClose} style={{ backgroundColor: "#FFD700" }}>
-              {t("cancel")}
-            </Button>
-            <Button style={{ backgroundColor: "#FFD700" }} onPress={handleSave}>
-              {t("save")}
-            </Button>
-          </View>
+        <View style={styles.categoriesList}>
+          {editedCategories.map((category, index) => (
+            <Animated.View
+              key={category.id}
+              entering={FadeInDown.delay(index * 50)}
+              style={[
+                styles.categoryItem,
+                { backgroundColor: theme.colors.card.background },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  { color: theme.colors.text.primary },
+                ]}
+              >
+                {category.name}
+              </Text>
+              <IconButton
+                icon="delete"
+                size={20}
+                iconColor={theme.colors.text.secondary}
+                onPress={() => handleDeleteCategory(index)}
+              />
+            </Animated.View>
+          ))}
         </View>
       </View>
-    </Modal>
+    </BaseEditModal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  addSection: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  addButton: {
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContainer: {
-    backgroundColor: "#1E1E1E",
-    width: "90%",
-    padding: 20,
-    borderRadius: 10,
+  addButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 16,
   },
-  modalTitle: {
-    fontSize: 20,
-    color: "#FFD700",
-    marginBottom: 15,
+  categoriesList: {
+    gap: 8,
   },
-  actions: {
+  categoryItem: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 20,
+    padding: 12,
+    borderRadius: 8,
+  },
+  categoryText: {
+    fontSize: 16,
+    flex: 1,
   },
 });
 

@@ -1,6 +1,9 @@
+import { Category } from "./category";
+
 export enum UserType {
   Mentor,
   Mentee,
+  General,
 }
 
 export interface User {
@@ -9,6 +12,7 @@ export interface User {
   username: string;
   role: string;
   imageUrl: string;
+  categories: Category[];
 }
 
 export interface LoginModel {

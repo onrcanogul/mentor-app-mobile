@@ -17,5 +17,4 @@ export interface Mentor extends BaseEntity {
   educations: Education[];
   experiences: Experience[];
   skills: Skill[];
-  categories: Category[];
 }

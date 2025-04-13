@@ -1,7 +1,19 @@
 // components/common/ConfirmationModal.tsx
 
 import React from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Pressable,
+  StatusBar,
+} from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
+import { BlurView, BlurTint } from "expo-blur";
+import { IconButton } from "react-native-paper";
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -20,65 +32,178 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = "Evet",
   cancelText = "İptal",
 }) => {
+  const { theme } = useTheme();
+  const ModalBackground = Platform.OS === "ios" ? BlurView : View;
+  const modalProps =
+    Platform.OS === "ios"
+      ? { intensity: 80, tint: "dark" as BlurTint }
+      : { style: { backgroundColor: "rgba(0, 0, 0, 0.85)" } };
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.message}>{message}</Text>
-          <View style={styles.buttons}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.cancelText}>{cancelText}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onConfirm} style={styles.confirmButton}>
-              <Text style={styles.confirmText}>{confirmText}</Text>
-            </TouchableOpacity>
-          </View>
+    <>
+      {Platform.OS === "android" && visible && (
+        <StatusBar
+          backgroundColor="rgba(0, 0, 0, 0.85)"
+          barStyle="light-content"
+        />
+      )}
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={onClose}
+      >
+        <View style={styles.container}>
+          <Pressable
+            onPress={onClose}
+            style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.85)" }]}
+          >
+            <ModalBackground
+              {...modalProps}
+              style={[
+                styles.overlay,
+                Platform.OS === "ios" && { backgroundColor: "transparent" },
+              ]}
+            >
+              <Pressable>
+                <View
+                  style={[
+                    styles.modalContainer,
+                    { backgroundColor: theme.colors.card.background },
+                  ]}
+                >
+                  <View style={styles.modal}>
+                    <View style={styles.header}>
+                      <IconButton
+                        icon="alert-circle"
+                        size={32}
+                        iconColor={theme.colors.primary.main}
+                      />
+                    </View>
+
+                    <Text
+                      style={[
+                        styles.message,
+                        { color: theme.colors.text.primary },
+                      ]}
+                    >
+                      {message}
+                    </Text>
+
+                    <View style={styles.buttonContainer}>
+                      <TouchableOpacity
+                        onPress={onClose}
+                        style={[
+                          styles.button,
+                          styles.cancelButton,
+                          { borderColor: theme.colors.input.border },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.buttonText,
+                            { color: theme.colors.text.primary },
+                          ]}
+                        >
+                          {cancelText}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={onConfirm}
+                        style={[
+                          styles.button,
+                          styles.confirmButton,
+                          { backgroundColor: theme.colors.error.main },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.buttonText,
+                            styles.confirmText,
+                            { color: theme.colors.error.contrastText },
+                          ]}
+                        >
+                          {confirmText}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            </ModalBackground>
+          </Pressable>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 
-export default ConfirmationModal;
-
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor:
+      Platform.OS === "android" ? "rgba(0, 0, 0, 0.85)" : "transparent",
+  },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "center",
     alignItems: "center",
   },
+  modalContainer: {
+    width: 320,
+    maxWidth: "90%",
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   modal: {
-    width: "80%",
-    backgroundColor: "#1E1E1E",
-    padding: 20,
-    borderRadius: 10,
+    padding: 24,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 16,
   },
   message: {
-    color: "#FFFFFF",
     fontSize: 16,
-    marginBottom: 20,
     textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
   },
-  buttons: {
+  buttonContainer: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   cancelButton: {
-    marginRight: 10,
-    padding: 10,
+    borderWidth: 1,
   },
   confirmButton: {
-    backgroundColor: "#FF6B6B",
-    borderRadius: 5,
-    padding: 10,
+    elevation: 2,
   },
-  cancelText: {
-    color: "#A0A0A0",
-    fontSize: 14,
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   confirmText: {
     color: "#FFFFFF",
-    fontSize: 14,
   },
 });
+
+export default ConfirmationModal;

@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Modal, BackHandler, Platform } from "react-native";
-import { Text, Button } from "react-native-paper";
-import DropDownPicker from "react-native-dropdown-picker";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  BackHandler,
+  Platform,
+  ScrollView,
+} from "react-native";
+import {
+  Text,
+  Button,
+  ActivityIndicator,
+  Chip,
+  Searchbar,
+} from "react-native-paper";
 import { Category } from "../../../../domain/category";
 import categoryService from "../../../../services/category-service";
 import menteeService from "../../../../services/mentee-service";
@@ -9,6 +21,8 @@ import toastrService from "../../../../services/toastr-service";
 import * as SystemUI from "expo-system-ui";
 import userService from "../../../../services/user-service";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface CategoryEditModalProps {
   visible: boolean;
@@ -24,28 +38,33 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [open, setOpen] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [dropdownItems, setDropdownItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const response = await categoryService.get(
-        () => {},
-        () => {}
-      );
-      setAllCategories(response);
-      setDropdownItems(
-        response.map((cat) => ({
-          label: t(`${cat.localizationCode}`),
-          value: cat.id,
-        }))
-      );
+      setIsLoading(true);
+      try {
+        const response = await categoryService.get(
+          () => {},
+          () => {}
+        );
+        setAllCategories(response);
+      } catch (error) {
+        toastrService.error(t("categoryFetchError"));
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchCategories();
-  }, []);
+    if (visible) {
+      fetchCategories();
+    }
+  }, [visible]);
 
   useEffect(() => {
     setSelectedCategoryIds(categories.map((c) => c.id!));
@@ -66,7 +85,6 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
     return () => backHandler.remove();
   }, [visible]);
 
-  // ✅ Navigation bar rengi korunsun (opsiyonel)
   useEffect(() => {
     if (visible && Platform.OS === "android") {
       SystemUI.setBackgroundColorAsync("#121212");
@@ -74,23 +92,43 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   }, [visible]);
 
   const handleSave = async () => {
-    const selected = allCategories.filter((cat) =>
-      selectedCategoryIds.includes(cat.id!)
-    );
-    const user = await userService.getCurrentUser();
-    const response: boolean | undefined = await menteeService.addCategory(
-      user.id,
-      selected
-    );
-    if (response === true) {
-      toastrService.success(t("categorySaveSuccess"));
-      onSave(selected);
-    } else {
+    setIsSaving(true);
+    try {
+      const selected = allCategories.filter((cat) =>
+        selectedCategoryIds.includes(cat.id!)
+      );
+      const user = await userService.getCurrentUser();
+      const response: boolean | undefined = await menteeService.addCategory(
+        user.id,
+        selected
+      );
+      if (response === true) {
+        toastrService.success(t("categorySaveSuccess"));
+        onSave(selected);
+        onClose();
+      } else {
+        toastrService.error(t("categorySaveError"));
+      }
+    } catch (error) {
       toastrService.error(t("categorySaveError"));
+    } finally {
+      setIsSaving(false);
     }
-
-    onClose();
   };
+
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const filteredCategories = allCategories.filter((category) =>
+    t(`${category.localizationCode}`)
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Modal
@@ -101,48 +139,97 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
       statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Kategorileri Seç</Text>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.card.background },
+          ]}
+        >
+          <Text
+            style={[styles.modalTitle, { color: theme.colors.text.primary }]}
+          >
+            {t("categoryEditTitle")}
+          </Text>
 
-          <DropDownPicker
-            multiple={true}
-            min={0}
-            max={10}
-            searchable={true}
-            searchPlaceholder={t("searchCategory")}
-            placeholder={t("selectCategory")}
-            placeholderStyle={{ color: "#FFFFFF" }}
-            open={open}
-            setOpen={setOpen}
-            value={selectedCategoryIds}
-            setValue={setSelectedCategoryIds}
-            items={dropdownItems}
-            setItems={setDropdownItems}
-            mode="BADGE"
-            badgeDotColors={["#FFD700", "#00FF99", "#FF6B6B"]}
-            badgeTextStyle={{ color: "#FFFFFF" }}
-            style={{
-              backgroundColor: "#2C2C2C",
-              borderColor: "#444",
-              zIndex: 1000,
-            }}
-            dropDownContainerStyle={{
-              backgroundColor: "#2C2C2C",
-              borderColor: "#444",
-            }}
-            listItemLabelStyle={{ color: "#FFFFFF" }}
-            searchTextInputStyle={{
-              backgroundColor: "#1E1E1E",
-              color: "#FFFFFF",
-            }}
+          <Searchbar
+            placeholder={t("searchCategory")}
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={[
+              styles.searchBar,
+              { backgroundColor: theme.colors.input.background },
+            ]}
+            inputStyle={{ color: theme.colors.text.primary }}
+            iconColor={theme.colors.text.secondary}
+            placeholderTextColor={theme.colors.text.disabled}
           />
 
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.primary.main}
+              />
+            </View>
+          ) : (
+            <ScrollView
+              style={styles.categoriesContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.categoryGrid}>
+                {filteredCategories.map((category, index) => (
+                  <Animated.View
+                    key={category.id}
+                    entering={FadeInDown.delay(index * 50)}
+                    style={styles.categoryChipContainer}
+                  >
+                    <Chip
+                      selected={selectedCategoryIds.includes(category.id!)}
+                      onPress={() => toggleCategory(category.id!)}
+                      style={[
+                        styles.categoryChip,
+                        {
+                          backgroundColor: selectedCategoryIds.includes(
+                            category.id!
+                          )
+                            ? theme.colors.primary.main
+                            : theme.colors.input.background,
+                        },
+                      ]}
+                      textStyle={{
+                        color: selectedCategoryIds.includes(category.id!)
+                          ? theme.colors.primary.contrastText
+                          : theme.colors.text.primary,
+                      }}
+                    >
+                      {t(`${category.localizationCode}`)}
+                    </Chip>
+                  </Animated.View>
+                ))}
+              </View>
+            </ScrollView>
+          )}
+
           <View style={styles.actions}>
-            <Button onPress={onClose} style={{ backgroundColor: "#FFD700" }}>
-              İptal
+            <Button
+              onPress={onClose}
+              mode="outlined"
+              style={styles.button}
+              textColor={theme.colors.text.primary}
+            >
+              {t("cancel")}
             </Button>
-            <Button style={{ backgroundColor: "#FFD700" }} onPress={handleSave}>
-              Kaydet
+            <Button
+              onPress={handleSave}
+              mode="contained"
+              style={[
+                styles.button,
+                { backgroundColor: theme.colors.primary.main },
+              ]}
+              loading={isSaving}
+              disabled={isLoading || isSaving}
+            >
+              {t("save")}
             </Button>
           </View>
         </View>
@@ -159,20 +246,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContainer: {
-    backgroundColor: "#1E1E1E",
     width: "90%",
+    maxHeight: "80%",
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 16,
   },
   modalTitle: {
     fontSize: 20,
-    color: "#FFD700",
-    marginBottom: 15,
+    fontWeight: "600",
+    marginBottom: 16,
+  },
+  searchBar: {
+    marginBottom: 16,
+    elevation: 0,
+    borderRadius: 8,
+  },
+  loadingContainer: {
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoriesContainer: {
+    maxHeight: 400,
+  },
+  categoryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+  categoryChipContainer: {
+    padding: 4,
+    width: "50%",
+  },
+  categoryChip: {
+    borderRadius: 8,
   },
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    borderRadius: 8,
   },
 });
 

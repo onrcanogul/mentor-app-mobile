@@ -1,19 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  TextInput,
-  StyleSheet,
-  Modal,
-  FlatList,
-  BackHandler,
-  Platform,
-} from "react-native";
-import { Text, Button, IconButton } from "react-native-paper";
+import { View, StyleSheet } from "react-native";
+import { Text, TextInput, IconButton } from "react-native-paper";
 import { Goal } from "../../../../domain/goal";
 import menteeService from "../../../../services/mentee-service";
-import * as SystemUI from "expo-system-ui";
 import userService from "../../../../services/user-service";
+import toastrService from "../../../../services/toastr-service";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import Animated, { FadeInUp } from "react-native-reanimated";
+import BaseEditModal from "../../../common/BaseEditModal";
 
 interface GoalsEditModalProps {
   visible: boolean;
@@ -29,162 +24,155 @@ const GoalsEditModal: React.FC<GoalsEditModalProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation();
-  const [updatedGoals, setUpdatedGoals] = useState<Goal[]>(goals);
-  const [newGoalText, setNewGoalText] = useState<string>("");
-  const [newTargetDate, setNewTargetDate] = useState<Date>(new Date());
+  const { theme } = useTheme();
+  const [editedGoals, setEditedGoals] = useState<Goal[]>([]);
+  const [newGoalText, setNewGoalText] = useState("");
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (visible) {
-          onClose();
-          return true;
-        }
-        return false;
-      }
-    );
-
-    return () => backHandler.remove();
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && Platform.OS === "android") {
-      SystemUI.setBackgroundColorAsync("#121212");
-    }
-  }, [visible]);
+    setEditedGoals(goals);
+  }, [goals]);
 
   const addGoal = async () => {
     if (newGoalText.trim()) {
-      const id = (await userService.getCurrentUser()).id;
-      const response = await menteeService.addGoal({
-        text: newGoalText,
-        targetDate: newTargetDate,
-        userId: id,
-        createdBy: "SYSTEM",
-        isDeleted: false,
-      });
+      try {
+        const user = await userService.getCurrentUser();
+        const newGoal = {
+          text: newGoalText.trim(),
+          targetDate: new Date(),
+          userId: user.id,
+          createdBy: "USER",
+        };
 
-      if (response !== undefined) {
-        const newList = [...updatedGoals, response];
-        setUpdatedGoals(newList);
-        setNewGoalText("");
-        setNewTargetDate(new Date());
-        onSave(newList);
+        const result = await menteeService.addGoal(newGoal);
+
+        if (result) {
+          const updatedGoals = [...editedGoals, result];
+          setEditedGoals(updatedGoals);
+          setNewGoalText("");
+          onSave(updatedGoals);
+          toastrService.success(t("goalAddSuccess"));
+        } else {
+          toastrService.error(t("goalAddError"));
+        }
+      } catch (error) {
+        toastrService.error(t("goalAddError"));
       }
     }
   };
 
-  const removeGoal = async (id: string) => {
-    const response = await menteeService.removeGoal(id);
+  const deleteGoal = async (goalId: string) => {
+    try {
+      const result = await menteeService.removeGoal(goalId);
 
-    if (response !== undefined) {
-      const newList = updatedGoals.filter((x) => x.id !== id);
-      setUpdatedGoals(newList);
-      onSave(newList);
+      if (result) {
+        const updatedGoals = editedGoals.filter((g) => g.id !== goalId);
+        setEditedGoals(updatedGoals);
+        onSave(updatedGoals);
+        toastrService.success(t("goalDeleteSuccess"));
+      } else {
+        toastrService.error(t("goalDeleteError"));
+      }
+    } catch (error) {
+      toastrService.error(t("goalDeleteError"));
     }
   };
 
   return (
-    <Modal
+    <BaseEditModal
       visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
+      onClose={onClose}
+      title={t("editGoalsTitle")}
+      onSave={onClose}
+      saveDisabled={false}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>{t("editGoalsTitle")}</Text>
-
-          <FlatList
-            data={updatedGoals}
-            keyExtractor={(item, index) => item.id || index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.goalItem}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.goalText}>{item.text}</Text>
-                  <Text style={styles.goalDate}>
-                    {new Date(item.targetDate).toLocaleDateString()}
-                  </Text>
-                </View>
-                <IconButton icon="delete" onPress={() => removeGoal(item.id)} />
-              </View>
-            )}
-          />
-
+      <View style={styles.container}>
+        <View style={styles.addSection}>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { backgroundColor: theme.colors.input.background },
+            ]}
             placeholder={t("newGoalPlaceholder")}
-            placeholderTextColor="#A0A0A0"
+            placeholderTextColor={theme.colors.text.disabled}
             value={newGoalText}
             onChangeText={setNewGoalText}
+            onSubmitEditing={addGoal}
+            returnKeyType="done"
           />
+          <IconButton
+            icon="plus"
+            mode="contained"
+            containerColor={theme.colors.primary.main}
+            iconColor={theme.colors.primary.contrastText}
+            size={24}
+            onPress={addGoal}
+            style={styles.addButton}
+            disabled={!newGoalText.trim()}
+          />
+        </View>
 
-          <Button onPress={addGoal} style={styles.addButton}>
-            {t("add")}
-          </Button>
-
-          <View style={styles.actions}>
-            <Button textColor="#FFD700" onPress={onClose}>
-              {t("cancel")}
-            </Button>
-          </View>
+        <View style={styles.goalsList}>
+          {editedGoals.map((goal, index) => (
+            <Animated.View
+              key={goal.id}
+              entering={FadeInUp.delay(index * 50)}
+              style={[
+                styles.goalItem,
+                { backgroundColor: theme.colors.card.background },
+              ]}
+            >
+              <Text
+                style={[styles.goalText, { color: theme.colors.text.primary }]}
+              >
+                {goal.text}
+              </Text>
+              <IconButton
+                icon="delete"
+                size={20}
+                iconColor={theme.colors.text.secondary}
+                onPress={() => deleteGoal(goal.id!)}
+              />
+            </Animated.View>
+          ))}
         </View>
       </View>
-    </Modal>
+    </BaseEditModal>
   );
 };
 
-export default GoalsEditModal;
-
 const styles = StyleSheet.create({
-  modalOverlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
+  },
+  addSection: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
   },
-  modalContainer: {
-    backgroundColor: "#1E1E1E",
-    width: "95%",
-    maxHeight: "85%",
-    padding: 20,
-    borderRadius: 12,
+  input: {
+    flex: 1,
+    height: 48,
+    borderRadius: 8,
+    paddingHorizontal: 12,
   },
-  modalTitle: {
-    fontSize: 20,
-    color: "#FFD700",
-    marginBottom: 10,
+  addButton: {
+    margin: 0,
+  },
+  goalsList: {
+    gap: 12,
   },
   goalItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 5,
+    padding: 16,
+    borderRadius: 12,
   },
   goalText: {
-    color: "#FFFFFF",
+    flex: 1,
     fontSize: 16,
   },
-  goalDate: {
-    color: "#AAAAAA",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  input: {
-    backgroundColor: "#2C2C2C",
-    color: "#FFFFFF",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  addButton: {
-    marginTop: 10,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 20,
-  },
 });
+
+export default GoalsEditModal;

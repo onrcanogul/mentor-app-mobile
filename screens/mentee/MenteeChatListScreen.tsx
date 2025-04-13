@@ -4,8 +4,9 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
   Image,
+  Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,10 +17,24 @@ import { formatDate } from "../../utils/dateFormatter";
 import chatService from "../../services/chat-service";
 import aiAssistantService from "../../services/ai-assistant-service";
 import userService from "../../services/user-service";
+import Animated, { FadeIn, FadeInRight } from "react-native-reanimated";
+import { useTheme } from "../../contexts/ThemeContext";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+const { width } = Dimensions.get("window");
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+type RootStackParamList = {
+  MenteeChat: { chatId: string };
+  AIChat: { chatId: string };
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const MenteeChatListScreen = () => {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
   const [isLoading, setLoading] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [aiChats, setAiChats] = useState<AIChat[]>([]);
@@ -40,208 +55,279 @@ const MenteeChatListScreen = () => {
   }
 
   async function fetchChats(userId: string) {
+    setLoading(true);
     const chatResult = await chatService.get(
       userId,
       () => {},
       () => {}
     );
-    console.log(chatResult);
     if (chatResult) setChats(chatResult);
+    setLoading(false);
   }
 
   async function fetchAIChats(userId: string) {
+    setLoading(true);
     const aiResult = await aiAssistantService.getPrevious(userId);
     setAiChats(aiResult || []);
+    setLoading(false);
   }
 
-  const renderChat = ({ item }: { item: Chat }) => {
+  const renderChat = ({ item, index }: { item: Chat; index: number }) => {
     if (!item.match || !currentUserId) return null;
 
-    const isCurrentUserExperienced =
-      currentUserId === item.match.experiencedUserId;
-
+    const isCurrentUserExperienced = currentUserId === item.match.receiverId;
     const otherUser = isCurrentUserExperienced
-      ? item.match.inexperiencedUser
-      : item.match.experiencedUser;
+      ? item.match.sender
+      : item.match.receiver;
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      otherUser.username
+    )}&background=random`;
 
     return (
-      <TouchableOpacity
+      <AnimatedTouchable
+        entering={FadeInRight.delay(index * 100).springify()}
+        style={styles.chatContainer}
         onPress={() => navigation.navigate("MenteeChat", { chatId: item.id })}
       >
-        <View style={styles.chatContainer}>
-          <View>
-            <Text style={styles.name}>
-              {item.match.experiencedUser.username}
+        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        <View style={styles.chatContent}>
+          <View style={styles.chatHeader}>
+            <Text style={[styles.name, { color: theme.colors.text.primary }]}>
+              {otherUser.username}
             </Text>
-            <Text style={styles.lastMessage}>
-              {item.messages?.[item.messages.length - 1]?.content ??
-                t("noMessages")}
+            <Text style={[styles.time, { color: theme.colors.text.secondary }]}>
+              {formatDate(item.createdDate)}
             </Text>
           </View>
-          <Text style={styles.time}>{formatDate(item.createdDate)}</Text>
+          <Text
+            style={[styles.lastMessage, { color: theme.colors.text.secondary }]}
+          >
+            {item.messages?.[item.messages.length - 1]?.content ??
+              t("noMessages")}
+          </Text>
         </View>
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   };
 
-  const renderAIChat = ({ item }: { item: AIChat }) => {
+  const renderAIChat = ({ item, index }: { item: AIChat; index: number }) => {
     const truncatedTitle =
-      item.title && item.title.length > 20
-        ? item.title.slice(0, 20) + "..."
-        : item.title || "🧠 AI Asistan";
+      item.title && item.title.length > 25
+        ? item.title.slice(0, 25) + "..."
+        : item.title || "AI Asistan";
 
     return (
-      <TouchableOpacity
+      <AnimatedTouchable
+        entering={FadeInRight.delay(index * 100).springify()}
+        style={styles.chatContainer}
         onPress={() => navigation.navigate("AIChat", { chatId: item.id })}
       >
-        <View style={styles.aiChatContainer}>
-          <View>
-            <Text style={styles.name}>{truncatedTitle}</Text>
-            <Text style={styles.lastMessage}>
-              {item.messages?.[item.messages.length - 1]?.content ??
-                t("noMessages")}
+        <View
+          style={[
+            styles.aiAvatar,
+            { backgroundColor: theme.colors.primary.main },
+          ]}
+        >
+          <Text style={styles.aiEmoji}>🤖</Text>
+        </View>
+        <View style={styles.chatContent}>
+          <View style={styles.chatHeader}>
+            <Text style={[styles.name, { color: theme.colors.text.primary }]}>
+              {truncatedTitle}
+            </Text>
+            <Text style={[styles.time, { color: theme.colors.text.secondary }]}>
+              {formatDate(item.createdDate)}
             </Text>
           </View>
-          <Text style={styles.time}>{formatDate(item.createdDate)}</Text>
+          <Text
+            style={[styles.lastMessage, { color: theme.colors.text.secondary }]}
+            numberOfLines={1}
+          >
+            {item.messages?.[item.messages.length - 1]?.content ??
+              t("noMessages")}
+          </Text>
         </View>
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   };
 
   return (
-    <>
-      <SafeAreaView style={styles.safeContainer}>
-        <View style={styles.container}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "normal" && styles.activeTabButton,
-              ]}
-              onPress={() => setActiveTab("normal")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "normal" && styles.activeTabText,
-                ]}
-              >
-                💬 {t("myConversations")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "ai" && styles.activeTabButton,
-              ]}
-              onPress={() => setActiveTab("ai")}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "ai" && styles.activeTabText,
-                ]}
-              >
-                🧠 {t("aiAssistant")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+      edges={["top"]}
+    >
+      <View
+        style={[
+          styles.tabRow,
+          { backgroundColor: theme.colors.background.secondary },
+        ]}
+      >
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "normal" && {
+              borderBottomColor: theme.colors.primary.main,
+              borderBottomWidth: 3,
+            },
+          ]}
+          onPress={() => setActiveTab("normal")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "normal"
+                    ? theme.colors.primary.main
+                    : theme.colors.text.disabled,
+              },
+            ]}
+          >
+            Sohbetler
+          </Text>
+        </TouchableOpacity>
 
-          {activeTab === "normal" ? (
-            <FlatList
-              data={chats.filter((chat) => !chat.isAiChat)}
-              keyExtractor={(item) => item.id}
-              renderItem={renderChat}
-              refreshing={isLoading}
-              onRefresh={() => fetchChats}
-            />
-          ) : (
-            <FlatList
-              data={aiChats}
-              renderItem={renderAIChat}
-              refreshing={isLoading}
-              onRefresh={() => fetchAIChats}
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "ai" && {
+              borderBottomColor: theme.colors.primary.main,
+              borderBottomWidth: 3,
+            },
+          ]}
+          onPress={() => setActiveTab("ai")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "ai"
+                    ? theme.colors.primary.main
+                    : theme.colors.text.disabled,
+              },
+            ]}
+          >
+            AI Asistan
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === "normal" ? (
+        <FlatList
+          data={chats}
+          keyExtractor={(item) => item.id}
+          renderItem={renderChat}
+          refreshing={isLoading}
+          onRefresh={getCurrentUser}
+          ItemSeparatorComponent={() => (
+            <View
+              style={[
+                styles.separator,
+                { backgroundColor: theme.colors.text.disabled },
+              ]}
             />
           )}
-        </View>
-      </SafeAreaView>
-      {/* <LoadingSpinner visible={isLoading} /> */}
-    </>
+          contentContainerStyle={styles.listContainer}
+        />
+      ) : (
+        <FlatList
+          data={aiChats}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAIChat}
+          refreshing={isLoading}
+          onRefresh={getCurrentUser}
+          ItemSeparatorComponent={() => (
+            <View
+              style={[
+                styles.separator,
+                { backgroundColor: theme.colors.text.disabled },
+              ]}
+            />
+          )}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#121212",
   },
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    padding: 20,
-  },
-  chatContainer: {
+  tabRow: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1E1E1E",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-  },
-  aiChatContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#2A2A2A",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: "#FFD700",
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: "#A0A0A0",
-  },
-  time: {
-    fontSize: 12,
-    color: "#FFD700",
-    marginLeft: "auto",
-  },
-  tabContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 8,
-    marginBottom: 15,
-    padding: 4,
+    justifyContent: "space-around",
+    paddingTop: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 6,
-  },
-  activeTabButton: {
-    backgroundColor: "#FFD700",
+    paddingVertical: 16,
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
   },
   tabText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.2,
   },
-  activeTabText: {
-    color: "#000000",
+  listContainer: {
+    flexGrow: 1,
+  },
+  separator: {
+    height: 1,
+    opacity: 0.08,
+  },
+  chatContainer: {
+    flexDirection: "row",
+    padding: 16,
+    alignItems: "center",
+  },
+  chatContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  chatHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  time: {
+    fontSize: 12,
+  },
+  lastMessage: {
+    fontSize: 14,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  aiAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  aiEmoji: {
+    fontSize: 24,
   },
 });
 

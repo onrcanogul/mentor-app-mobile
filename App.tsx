@@ -7,7 +7,6 @@ import LoginScreen from "./screens/auth/LoginScreen";
 import RegisterScreen from "./screens/auth/RegisterScreen";
 import HomeScreen from "./screens/home/HomeScreen";
 import MentorProfileScreen from "./screens/mentor/MentorProfileScreen";
-import ChatScreen from "./screens/common/ChatScreen";
 import MenteeTabNavigator from "./bars/MenteeNavigationBar";
 import AiAssistantScreen from "./screens/mentee/AiAssistantScreen";
 import MenteeProfileScreen from "./screens/mentee/MenteeProfileScreen";
@@ -24,38 +23,99 @@ import MenteeMatchScreen from "./screens/mentee/MenteeMatchScreen";
 import MenteeChatScreen from "./screens/mentee/MenteeChatScreen";
 import MentorChatScreen from "./screens/mentor/MentorChatScreen";
 import { StatusBar } from "expo-status-bar";
+import CommonSideNavigationBar from "./bars/CommonSideNavigationBar";
+import GeneralMatchScreen from "./screens/general/GeneralMatchScreen";
+import GeneralProfileScreen from "./screens/general/GeneralProfileScreen";
+import GeneralChatScreen from "./screens/general/GeneralChatScreen";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 
 const Stack = createStackNavigator();
 
-const toastConfig = {
-  success: (props: any) => (
-    <BaseToast
-      {...props}
-      style={{
-        marginTop: 20,
-        borderLeftColor: "#00FF99",
-        backgroundColor: "#1E1E1E",
-      }}
-      text1Style={{ color: "#FFFFFF" }}
-      text2Style={{ color: "#FFFFFF" }}
-    />
-  ),
-  error: (props: any) => (
-    <ErrorToast
-      {...props}
-      style={{
-        marginTop: 20,
-        borderLeftColor: "#FF6B6B",
-        backgroundColor: "#1E1E1E",
-      }}
-      text1Style={{ color: "#FFFFFF" }}
-      text2Style={{ color: "#FFFFFF" }}
-    />
-  ),
+const ToastWrapper = () => {
+  const { theme } = useTheme();
+
+  const toastConfig = {
+    success: (props: any) => (
+      <BaseToast
+        {...props}
+        style={{
+          marginTop: 20,
+          borderLeftColor: theme.colors.success.main,
+          backgroundColor: theme.colors.background.secondary,
+          borderRadius: 12,
+          height: 60,
+          width: "90%",
+          maxWidth: 400,
+        }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: theme.colors.text.primary,
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: theme.colors.text.secondary,
+        }}
+      />
+    ),
+    error: (props: any) => (
+      <ErrorToast
+        {...props}
+        style={{
+          marginTop: 20,
+          borderLeftColor: theme.colors.error.main,
+          backgroundColor: theme.colors.background.secondary,
+          borderRadius: 12,
+          height: 60,
+          width: "90%",
+          maxWidth: 400,
+        }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: theme.colors.text.primary,
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: theme.colors.text.secondary,
+        }}
+      />
+    ),
+    info: (props: any) => (
+      <BaseToast
+        {...props}
+        style={{
+          marginTop: 20,
+          borderLeftColor: theme.colors.primary.main,
+          backgroundColor: theme.colors.background.secondary,
+          borderRadius: 12,
+          height: 60,
+          width: "90%",
+          maxWidth: 400,
+        }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: theme.colors.text.primary,
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: theme.colors.text.secondary,
+        }}
+      />
+    ),
+  };
+
+  return <Toast config={toastConfig} />;
 };
 
 const AppNavigator = () => {
   const { isAuthenticated, role, isLoading } = useAuth();
+  console.log("***************************");
+  console.log(role);
 
   if (isLoading) {
     return (
@@ -89,7 +149,17 @@ const AppNavigator = () => {
             <Stack.Screen name="Main" component={MenteeTabNavigator} />
             <Stack.Screen name="AIAssistant" component={AiAssistantScreen} />
           </>
-        ) : !isAuthenticated || role == null ? (
+        ) : isAuthenticated && role === UserType.General ? (
+          <>
+            <Stack.Screen name="Main" component={CommonSideNavigationBar} />
+            <Stack.Screen name="GeneralMatch" component={GeneralMatchScreen} />
+            <Stack.Screen
+              name="GeneralProfile"
+              component={GeneralProfileScreen}
+            />
+            <Stack.Screen name="GeneralChat" component={GeneralChatScreen} />
+          </>
+        ) : !isAuthenticated || role === null ? (
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -98,9 +168,6 @@ const AppNavigator = () => {
         ) : (
           <></>
         )}
-
-        {/* Ortak Ekranlar */}
-
         <Stack.Screen name="Mentor" component={MentorProfileScreen} />
         <Stack.Screen name="Mentee" component={MenteeProfileScreen} />
         <Stack.Screen name="MentorMatch" component={MentorMatchScreen} />
@@ -117,10 +184,12 @@ const AppNavigator = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <NavigationContainer ref={navigationRef}>
-        <AppNavigator />
-        <Toast config={toastConfig} />
-      </NavigationContainer>
+      <ThemeProvider>
+        <NavigationContainer ref={navigationRef}>
+          <AppNavigator />
+          <ToastWrapper />
+        </NavigationContainer>
+      </ThemeProvider>
     </AuthProvider>
   );
 };

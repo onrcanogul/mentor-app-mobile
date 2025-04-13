@@ -8,6 +8,7 @@ class ToastrService {
       text2: message,
       position: "top",
       visibilityTime: 4000,
+      topOffset: 20,
     });
   }
 
@@ -18,6 +19,7 @@ class ToastrService {
       text2: message,
       position: "top",
       visibilityTime: 4000,
+      topOffset: 20,
     });
   }
 
@@ -28,6 +30,7 @@ class ToastrService {
       text2: message,
       position: "top",
       visibilityTime: 4000,
+      topOffset: 20,
     });
   }
 }

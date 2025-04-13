@@ -3,6 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { Button, Card, Title, Paragraph } from "react-native-paper";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App"; // Burada App.tsx veya doğru dosyanın yolu kullanılmalı
+import { useTheme } from "../../contexts/ThemeContext";
 
 type AuthScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -14,19 +15,44 @@ type Props = {
 };
 
 const AuthScreen: React.FC<Props> = ({ navigation }) => {
+  const { theme } = useTheme();
   const isLoggedIn = true; // Simüle edilen token durumu
 
   return (
-    <View style={styles.container}>
-      <Card style={styles.card}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+    >
+      <Card
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.card.background,
+            borderColor: theme.colors.card.border,
+            borderWidth: 1,
+          },
+        ]}
+      >
         <Card.Content>
-          <Title style={styles.title}>Mentor Match</Title>
-          <Paragraph style={styles.subtitle}>Hikayenizi Başlatın!</Paragraph>
+          <Title style={[styles.title, { color: theme.colors.text.accent }]}>
+            Mentor Match
+          </Title>
+          <Paragraph
+            style={[styles.subtitle, { color: theme.colors.text.secondary }]}
+          >
+            Hikayenizi Başlatın!
+          </Paragraph>
         </Card.Content>
         {isLoggedIn ? (
           <Button
             mode="contained"
-            style={styles.button}
+            style={[
+              styles.button,
+              { backgroundColor: theme.colors.button.primary },
+            ]}
+            labelStyle={{ color: theme.colors.button.text }}
             onPress={() => navigation.navigate("Home")}
           >
             Hoş geldiniz!
@@ -35,14 +61,22 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
           <View>
             <Button
               mode="contained"
-              style={styles.button}
+              style={[
+                styles.button,
+                { backgroundColor: theme.colors.button.primary },
+              ]}
+              labelStyle={{ color: theme.colors.button.text }}
               onPress={() => navigation.navigate("Login")}
             >
               Giriş Yap
             </Button>
             <Button
               mode="outlined"
-              style={styles.button}
+              style={[
+                styles.button,
+                { borderColor: theme.colors.button.primary },
+              ]}
+              labelStyle={{ color: theme.colors.button.primary }}
               onPress={() => navigation.navigate("Register")}
             >
               Kayıt Ol
@@ -59,24 +93,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
   },
   card: {
     width: "85%",
     padding: 20,
-    backgroundColor: "white",
     borderRadius: 12,
     elevation: 5,
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#4F46E5",
     textAlign: "center",
   },
   subtitle: {
     fontSize: 18,
-    color: "#6B7280",
     textAlign: "center",
     marginBottom: 20,
   },

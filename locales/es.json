@@ -2,12 +2,32 @@
   "language": "Idioma",
   "homeMentor": "Continuar como Mentor",
   "homeMentee": "Continuar como Aprendiz",
+  "homeGeneral": "Continuar como Miembro de la Comunidad",
+  "communityMember": "Miembro de la Comunidad",
 
   "welcomeAIMessage": "¡Hola! Soy tu asistente personal de IA. Puedes hacer preguntas sobre cualquier tema y recibir orientación relacionada con tu carrera.",
   "chatTitle": "Título de la conversación...",
   "startNewChat": "Iniciar nuevo chat",
 
-  "profile": "Perfil",
+  "profile": {
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "uploadPhoto": "Subir Foto",
+    "changePhoto": "Cambiar Foto",
+    "galleryPermissionRequired": "Se requiere permiso de acceso a la galería",
+    "sections": {
+      "badges": "Insignias",
+      "certificates": "Certificados",
+      "educations": "Educación",
+      "skills": "Habilidades",
+      "experiences": "Experiencia",
+      "categories": "Categorías",
+      "goals": "Objetivos",
+      "contact": "Contacto"
+    }
+  },
+
   "badges": "Insignias",
   "certificates": "Certificados",
   "educations": "Educaciones",
@@ -96,20 +116,26 @@
   "noMessages": "¡No hay mensajes!",
   "aiAssistant": "Asistente de IA",
 
-  "login": "Acceder",
+  "login": "Iniciar Sesión",
   "logout": "Cerrar sesión",
-  "emailOrUsername": "Nombre de usuario o Email",
+  "emailOrUsername": "Correo o Nombre de Usuario",
   "password": "Contraseña",
   "sureLogout": "¿Estás seguro de que deseas cerrar sesión?",
   "cancel": "Cancelar",
 
   "fullName": "Nombre completo",
   "register": "Registrarse",
-  "email": "Correo electrónico",
-  "username": "Nombre de usuario",
-  "confirmPassword": "Confirmar contraseña",
-  "dontHaveAccount": "¿No tienes una cuenta? Regístrate",
-  "alreadyHaveAccount": "¿Ya tienes una cuenta? Iniciar sesión",
+  "email": "Correo Electrónico",
+  "username": "Nombre de Usuario",
+  "confirmPassword": "Confirmar Contraseña",
+  "dontHaveAccount": "¿No tienes una cuenta?",
+  "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+  "signUp": "Registrarse",
+  "welcomeBack": "¡Bienvenido de Nuevo!",
+  "createAccount": "Crear Cuenta",
+  "passwordsDoNotMatch": "Las contraseñas no coinciden",
+  "registerSuccess": "¡Registro exitoso!",
+  "loginSuccess": "¡Inicio de sesión exitoso!",
 
   "seen": "Visto",
   "send": "Enviar",
@@ -119,8 +145,16 @@
   "chatHasEnded": "Esta conversación ha sido finalizada.",
   "writeMessage": "Escribe un mensaje...",
 
+  "editCertificate": "Editar Certificado",
+  "certificateName": "Nombre del Certificado",
+  "description": "Descripción",
+  "from": "De",
+  "certificateSaveSuccess": "¡Certificado guardado con éxito!",
+  "certificateSaveError": "Error al guardar el certificado.",
+
   "account": "Cuenta",
   "profileInfos": "Información del perfil",
+  "profileBar": "Profile",
   "profileDescription": "Actualiza tu nombre de usuario y correo electrónico",
   "changePasswordTitle": "Cambiar tu contraseña",
   "changePasswordDescription": "Actualiza la contraseña de tu cuenta",
@@ -224,5 +258,156 @@
   "chatStartFailed": "No se pudo iniciar el chat.",
   "matchSuccess": "Emparejamiento exitoso.",
   "matchError": "Error en el emparejamiento.",
-  "logoutSuccess": "Cierre de sesión exitoso."
+  "logoutSuccess": "Cierre de sesión exitoso.",
+
+  "mentor": "Mentor",
+  "mentee": "Aprendiz",
+  "homeGeneral": "Continuar como Miembro",
+  "homeDescription": "Elige tu próximo paso en el viaje de aprendizaje",
+  "home0Description": "Comparta sus experiencias y descubra nuevos talentos",
+  "home1Description": "Alcance sus objetivos con su mentor",
+  "home2Description": "Únase a la comunidad y comparta experiencias",
+
+  "match": {
+    "title": "Solicitudes de Emparejamiento",
+    "tabs": {
+      "pending": "Pendientes",
+      "accepted": "Aceptados",
+      "rejected": "Rechazados"
+    },
+    "empty": {
+      "pending": "No hay solicitudes pendientes",
+      "accepted": "No hay emparejamientos aceptados",
+      "rejected": "No hay emparejamientos rechazados"
+    },
+    "actions": {
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "openChat": "Abrir Chat"
+    },
+    "status": {
+      "accepted": "Emparejamiento aceptado",
+      "rejected": "Emparejamiento rechazado",
+      "waiting": "Pendiente",
+      "matched": "Emparejado",
+      "ended": "Finalizado"
+    },
+    "success": {
+      "accept": "Emparejamiento aceptado exitosamente",
+      "reject": "Emparejamiento rechazado exitosamente",
+      "match": "Emparejamiento exitoso"
+    },
+    "errors": {
+      "fetch": "Error al cargar los emparejamientos",
+      "accept": "Error al aceptar el emparejamiento",
+      "reject": "Error al rechazar el emparejamiento",
+      "match": "Error en el emparejamiento",
+      "count": "La cantidad de pendientes inexpertos es mayor que 4"
+    },
+    "sections": {
+      "active": "Coincidencias Activas",
+      "waiting": "Coincidencias Pendientes",
+      "past": "Coincidencias Pasadas"
+    },
+    "notifications": {
+      "new": "¡Un mentee te ha enviado una solicitud de mentoría!",
+      "title": "Nueva coincidencia con un mentee"
+    },
+    "search": {
+      "placeholder": "Buscar por nombre o correo..."
+    }
+  },
+
+  "chats": "Chats",
+  "categoryFetchError": "Se produjo un error al cargar las categorías.",
+  "goalAddSuccess": "Objetivo añadido con éxito",
+  "goalAddError": "Se produjo un error al añadir el objetivo",
+  "goalDeleteSuccess": "Objetivo eliminado con éxito",
+  "goalDeleteError": "Se produjo un error al eliminar el objetivo",
+
+  "skill": {
+    "name": "Nombre de la Habilidad",
+    "description": "Descripción de la Habilidad",
+    "level": "Nivel de Habilidad",
+    "add": "Agregar Habilidad",
+    "edit": "Editar Habilidades",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saveSuccess": "Habilidades guardadas exitosamente",
+    "saveError": "Error al guardar las habilidades",
+    "empty": "Aún no se han agregado habilidades",
+    "placeholder": {
+      "name": "Ej: JavaScript",
+      "description": "Escriba una breve descripción sobre esta habilidad"
+    }
+  },
+
+  "education": {
+    "name": "Nombre de la Institución",
+    "description": "Descripción",
+    "level": "Nivel de Educación",
+    "add": "Agregar Educación",
+    "edit": "Editar Educación",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saveSuccess": "Información educativa guardada exitosamente",
+    "saveError": "Error al guardar la información educativa",
+    "empty": "Aún no se ha agregado información educativa",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Finalización",
+    "current": "Actualmente Cursando",
+    "degree": "Título",
+    "field": "Campo de Estudio",
+    "grade": "Calificación",
+    "activities": "Actividades y Sociedades",
+    "placeholder": {
+      "name": "Ej: Universidad de Barcelona",
+      "description": "Escriba una breve descripción sobre su educación"
+    }
+  },
+
+  "experience": {
+    "name": "Cargo",
+    "company": "Empresa",
+    "location": "Ubicación",
+    "description": "Descripción",
+    "add": "Agregar Experiencia",
+    "edit": "Editar Experiencia",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saveSuccess": "Información de experiencia guardada exitosamente",
+    "saveError": "Error al guardar la información de experiencia",
+    "empty": "Aún no se ha agregado experiencia",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Finalización",
+    "current": "Trabajo aquí actualmente",
+    "relatedSkills": "Habilidades Relacionadas",
+    "placeholder": {
+      "name": "Ej: Ingeniero de Software",
+      "company": "Ej: Google",
+      "description": "Sus responsabilidades y logros en este cargo"
+    }
+  },
+
+  "certificate": {
+    "name": "Nombre del Certificado",
+    "organization": "Organización",
+    "description": "Descripción",
+    "add": "Agregar Certificado",
+    "edit": "Editar Certificados",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saveSuccess": "Certificado guardado exitosamente",
+    "saveError": "Error al guardar el certificado",
+    "empty": "Aún no se han agregado certificados",
+    "issueDate": "Fecha de Emisión",
+    "expiryDate": "Fecha de Vencimiento",
+    "credential": "ID de Credencial",
+    "url": "URL del Certificado",
+    "placeholder": {
+      "name": "Ej: AWS Solutions Architect",
+      "organization": "Ej: Amazon Web Services",
+      "description": "Breve descripción sobre el certificado"
+    }
+  }
 }

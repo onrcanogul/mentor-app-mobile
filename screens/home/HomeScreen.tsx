@@ -6,17 +6,21 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  Image,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { UserType } from "../../domain/user";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }: any) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
 
@@ -38,43 +42,87 @@ export default function HomeScreen({ navigation }: any) {
     navigation.navigate("Login", { userType: type });
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
+  const renderOption = (type: UserType, icon: string, title: string) => (
+    <TouchableOpacity
+      onPress={() => goToLoginScreen(type)}
+      activeOpacity={0.9}
+      style={[
+        styles.optionBox,
+        {
+          backgroundColor: theme.colors.card.background,
+          borderColor: theme.colors.card.border,
+          shadowColor: theme.colors.text.primary,
+        },
+      ]}
+    >
       <LinearGradient
-        colors={["#1E1E1E", "#121212"]}
-        style={StyleSheet.absoluteFill}
+        colors={[
+          theme.colors.button.primary + "20",
+          theme.colors.button.primary + "05",
+        ]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       />
-
-      <Animated.Text style={[styles.title, { opacity: fadeAnim }]}>
-        Mentor Match
-      </Animated.Text>
-
-      <Animated.View
-        style={{
-          transform: [{ translateY: slideAnim }],
-          width: "100%",
-          alignItems: "center",
-        }}
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={32}
+        color={theme.colors.button.primary}
+        style={styles.icon}
+      />
+      <Text style={[styles.optionTitle, { color: theme.colors.text.primary }]}>
+        {title}
+      </Text>
+      <Text
+        style={[styles.optionSubtitle, { color: theme.colors.text.secondary }]}
       >
-        <TouchableOpacity
-          onPress={() => goToLoginScreen(UserType.Mentor)}
-          activeOpacity={0.9}
-        >
-          <BlurView intensity={60} tint="dark" style={styles.optionBox}>
-            <Text style={styles.optionText}>{t("homeMentor")}</Text>
-          </BlurView>
-        </TouchableOpacity>
+        {t(`home${type}Description`)}
+      </Text>
+    </TouchableOpacity>
+  );
 
-        <TouchableOpacity
-          onPress={() => goToLoginScreen(UserType.Mentee)}
-          activeOpacity={0.9}
-          style={{ marginTop: 20 }}
+  return (
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.header}>
+          <Image
+            source={require("../../assets/ai-icon.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+            Mentor Match
+          </Text>
+          <Text
+            style={[styles.subtitle, { color: theme.colors.text.secondary }]}
+          >
+            {t("homeDescription")}
+          </Text>
+        </View>
+
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <BlurView intensity={60} tint="dark" style={styles.optionBox}>
-            <Text style={styles.optionText}>{t("homeMentee")}</Text>
-          </BlurView>
-        </TouchableOpacity>
-      </Animated.View>
+          {renderOption(UserType.Mentor, "account-tie", t("homeMentor"))}
+          {renderOption(UserType.Mentee, "school", t("homeMentee"))}
+          {renderOption(UserType.General, "account-group", t("homeGeneral"))}
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -82,35 +130,63 @@ export default function HomeScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  header: {
     alignItems: "center",
-    justifyContent: "center",
+    paddingTop: 40,
     paddingHorizontal: 20,
   },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: "bold",
-    color: "#FFD700",
-    marginBottom: 50,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
     textAlign: "center",
-    textShadowColor: "#000",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    marginBottom: 40,
+    paddingHorizontal: 20,
+  },
+  content: {
+    paddingHorizontal: 20,
   },
   optionBox: {
-    width: width * 0.85,
-    paddingVertical: 20,
-    paddingHorizontal: 25,
-    borderRadius: 15,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    width: "100%",
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#333",
+    overflow: "hidden",
+    elevation: 2,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  optionText: {
-    color: "#FFFFFF",
-    fontSize: 18,
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  icon: {
+    marginBottom: 12,
+  },
+  optionTitle: {
+    fontSize: 20,
     fontWeight: "600",
-    textAlign: "center",
-    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  optionSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

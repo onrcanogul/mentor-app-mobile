@@ -3,198 +3,304 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
-import { TextInput, Button, RadioButton } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { TextInput, Button } from "react-native-paper";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "../../contexts/ThemeContext";
+import { UserType } from "../../domain/user";
 import userService from "../../services/user-service";
 import toastrService from "../../services/toastr-service";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { UserType } from "../../domain/user";
-import { useTranslation } from "react-i18next";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-type RootStackParamList = {
-  Register: { userType: UserType };
-};
-
-type RegisterScreenRouteProp = RouteProp<RootStackParamList, "Register">;
-
-const RegisterScreen: React.FC = () => {
-  const route = useRoute<RegisterScreenRouteProp>();
-  const navigation = useNavigation();
+const RegisterScreen = () => {
   const { t } = useTranslation();
+  const navigation = useNavigation();
+  const route = useRoute();
   const { userType } = route.params;
+  const { theme } = useTheme();
 
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userRole, setUserRole] = useState<"Mentor" | "Mentee">("Mentee");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      toastrService.error(t("passwordsDoNotMatch"));
+      return;
+    }
+
     setLoading(true);
     await userService.register(
-      {
-        userName: fullName,
-        fullName,
-        email,
-        password,
-        confirmPassword,
-        userRole: userRole === "Mentor" ? 0 : 1,
-      },
+      { username, email, password, role: userType },
       () => {
         toastrService.success(t("registerSuccess"));
-        navigation.navigate("Home");
+        navigation.navigate("Login", { userType });
         setLoading(false);
       },
       () => {
-        toastrService.error(t("registerSuccess"));
         setLoading(false);
       }
     );
   };
 
+  const getUserIcon = () => {
+    switch (userType) {
+      case UserType.Mentor:
+        return "account-tie";
+      case UserType.Mentee:
+        return "school";
+      default:
+        return "account-group";
+    }
+  };
+
+  const getUserTitle = () => {
+    switch (userType) {
+      case UserType.Mentor:
+        return "👨‍🏫 " + t("mentor");
+      case UserType.Mentee:
+        return "👩‍🎓 " + t("mentee");
+      default:
+        return "👥 " + t("communityMember");
+    }
+  };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
     >
-      <Text style={styles.title}>📝 {t("register")}</Text>
-
-      <TextInput
-        label={t("fullName")}
-        value={fullName}
-        onChangeText={setFullName}
-        mode="outlined"
-        style={styles.input}
-        textColor="#FFFFFF"
-        theme={inputTheme}
-      />
-
-      <TextInput
-        label={t("email")}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        mode="outlined"
-        style={styles.input}
-        textColor="#FFFFFF"
-        theme={inputTheme}
-      />
-
-      <TextInput
-        label={t("password")}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        mode="outlined"
-        style={styles.input}
-        textColor="#FFFFFF"
-        theme={inputTheme}
-      />
-
-      <TextInput
-        label={t("confirmPassword")}
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        mode="outlined"
-        style={styles.input}
-        textColor="#FFFFFF"
-        theme={inputTheme}
-      />
-
-      <View style={styles.radioContainer}>
-        <RadioButton.Group
-          onValueChange={(value) => setUserRole(value as "Mentor" | "Mentee")}
-          value={userRole}
-        >
-          <View style={styles.radioRow}>
-            <RadioButton value="Mentor" color="#FFD700" />
-            <Text style={styles.radioText}>Mentor</Text>
-            <RadioButton value="Mentee" color="#FFD700" />
-            <Text style={styles.radioText}>Mentee</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <MaterialCommunityIcons
+              name={getUserIcon()}
+              size={48}
+              color={theme.colors.button.primary}
+              style={styles.headerIcon}
+            />
+            <Text
+              style={[styles.headerTitle, { color: theme.colors.text.primary }]}
+            >
+              {getUserTitle()}
+            </Text>
+            <Text
+              style={[
+                styles.headerSubtitle,
+                { color: theme.colors.text.secondary },
+              ]}
+            >
+              {t("createAccount")}
+            </Text>
           </View>
-        </RadioButton.Group>
-      </View>
 
-      <Button
-        mode="contained"
-        onPress={handleRegister}
-        loading={loading}
-        style={styles.button}
-        labelStyle={styles.buttonText}
-      >
-        {t("register")}
-      </Button>
+          <View style={styles.form}>
+            <TextInput
+              label={t("username")}
+              value={username}
+              onChangeText={setUsername}
+              mode="outlined"
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.input.background },
+              ]}
+              textColor={theme.colors.input.text}
+              outlineColor={theme.colors.input.border}
+              activeOutlineColor={theme.colors.button.primary}
+              left={
+                <TextInput.Icon
+                  icon="account"
+                  color={theme.colors.text.secondary}
+                />
+              }
+            />
 
-      <TouchableOpacity
-        onPress={() => navigation.navigate("Login", { userType })}
-      >
-        <Text style={styles.linkText}>{t("alreadyHaveAccount")}</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+            <TextInput
+              label={t("email")}
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.input.background },
+              ]}
+              textColor={theme.colors.input.text}
+              outlineColor={theme.colors.input.border}
+              activeOutlineColor={theme.colors.button.primary}
+              left={
+                <TextInput.Icon
+                  icon="email"
+                  color={theme.colors.text.secondary}
+                />
+              }
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <TextInput
+              label={t("password")}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              mode="outlined"
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.input.background },
+              ]}
+              textColor={theme.colors.input.text}
+              outlineColor={theme.colors.input.border}
+              activeOutlineColor={theme.colors.button.primary}
+              left={
+                <TextInput.Icon
+                  icon="lock"
+                  color={theme.colors.text.secondary}
+                />
+              }
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? "eye-off" : "eye"}
+                  color={theme.colors.text.secondary}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
+
+            <TextInput
+              label={t("confirmPassword")}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              mode="outlined"
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.input.background },
+              ]}
+              textColor={theme.colors.input.text}
+              outlineColor={theme.colors.input.border}
+              activeOutlineColor={theme.colors.button.primary}
+              left={
+                <TextInput.Icon
+                  icon="lock-check"
+                  color={theme.colors.text.secondary}
+                />
+              }
+              right={
+                <TextInput.Icon
+                  icon={showConfirmPassword ? "eye-off" : "eye"}
+                  color={theme.colors.text.secondary}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                />
+              }
+            />
+
+            <Button
+              mode="contained"
+              onPress={handleRegister}
+              loading={loading}
+              style={[
+                styles.registerButton,
+                { backgroundColor: theme.colors.button.primary },
+              ]}
+              labelStyle={[
+                styles.registerButtonText,
+                { color: theme.colors.button.text },
+              ]}
+            >
+              {t("register")}
+            </Button>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Login", { userType })}
+              style={styles.loginLink}
+            >
+              <Text
+                style={[
+                  styles.loginText,
+                  { color: theme.colors.text.secondary },
+                ]}
+              >
+                {t("alreadyHaveAccount")}{" "}
+                <Text
+                  style={[
+                    styles.loginTextBold,
+                    { color: theme.colors.text.accent },
+                  ]}
+                >
+                  {t("login")}
+                </Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
-const inputTheme = {
-  colors: {
-    primary: "#FFD700",
-    text: "#FFFFFF",
-    placeholder: "#AAAAAA",
-    background: "#1E1E1E",
-  },
-};
-
 const styles = StyleSheet.create({
+  safeContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 25,
-    backgroundColor: "#121212",
+    padding: 20,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#FFD700",
-    marginBottom: 25,
-    textAlign: "center",
-  },
-  input: {
-    marginBottom: 15,
-    backgroundColor: "#1E1E1E",
-  },
-  radioContainer: {
-    marginBottom: 15,
-  },
-  radioRow: {
-    flexDirection: "row",
+  header: {
     alignItems: "center",
+    marginTop: 40,
+    marginBottom: 40,
   },
-  radioText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    marginRight: 25,
+  headerIcon: {
+    marginBottom: 16,
   },
-  button: {
-    backgroundColor: "#FFD700",
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  buttonText: {
+  headerTitle: {
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#121212",
+    marginBottom: 8,
+  },
+  headerSubtitle: {
     fontSize: 16,
   },
-  linkText: {
-    marginTop: 15,
-    textAlign: "center",
-    color: "#AAAAAA",
-    textDecorationLine: "underline",
+  form: {
+    width: "100%",
+  },
+  input: {
+    marginBottom: 16,
+  },
+  registerButton: {
+    paddingVertical: 8,
+    marginTop: 24,
+    borderRadius: 8,
+  },
+  registerButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loginLink: {
+    marginTop: 24,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  loginText: {
     fontSize: 14,
+  },
+  loginTextBold: {
+    fontWeight: "600",
   },
 });
 

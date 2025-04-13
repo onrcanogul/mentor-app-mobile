@@ -2,14 +2,23 @@
   "language": "Language",
   "homeMentor": "Continue as Mentor",
   "homeMentee": "Continue as Mentee",
+  "homeGeneral": "Continue as Community Member",
+  "communityMember": "Community Member",
 
   "welcomeAIMessage": "Hello! I am your personal AI assistant. You can ask questions on any topic and receive guidance related to your career.",
   "chatTitle": "Conversation title...",
   "startNewChat": "Start New Chat",
   "previousChats": "Previous Conversations",
 
+  "editCertificate": "Edit Certificate",
+  "certificateName": "Certificate Name",
+  "description": "Description",
+  "from": "From",
+  "certificateSaveSuccess": "Certificate saved successfully!",
+  "certificateSaveError": "Error saving certificate.",
+
   "categoryEditTitle": "Select Categories",
-  "profile": "Profile",
+  "profileBar": "Profile",
   "badges": "Badges",
   "certificates": "Certificates",
   "educations": "Educations",
@@ -103,11 +112,16 @@
   "password": "Password",
   "sureLogout": "Are you sure you want to log out?",
   "cancel": "Cancel",
-  "dontHaveAccount": "Don't have an account? Sign Up",
-  "alreadyHaveAccount": "Already have an account? Sign In",
+  "dontHaveAccount": "Don't have an account?",
+  "alreadyHaveAccount": "Already have an account?",
+  "signUp": "Sign Up",
+  "welcomeBack": "Welcome Back!",
+  "createAccount": "Create Account",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "registerSuccess": "Registration successful!",
+  "loginSuccess": "Login successful!",
 
   "fullName": "Ad Soyad",
-  "register": "Register",
   "email": "Email",
   "username": "Username",
   "confirmPassword": "Confirm Password",
@@ -220,12 +234,182 @@
   "company": "Company",
   "SkillSuccessSave": "Skill saved successfully.",
   "SkillErrorSave": "Failed to save skill.",
-  "loginSuccess": "Login successful.",
-  "registerSuccess": "Registration successful.",
-  "registerError": "Registration failed.",
   "aiChatRedirect": "AI Chat started, redirecting...",
   "chatStartFailed": "Failed to start chat.",
   "matchSuccess": "Match successful.",
   "matchError": "Failed to match.",
-  "logoutSuccess": "Logout successful."
+  "logoutSuccess": "Logout successful.",
+
+  "mentor": "Mentor",
+  "mentee": "Mentee",
+  "homeDescription": "Choose your next step in the learning journey",
+  "home0Description": "Share your experiences and discover new talents",
+  "home1Description": "Achieve your goals with your mentor",
+  "home2Description": "Join the community and share experiences",
+  "title": "Match Requests",
+  "tabs": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "match": {
+    "title": "Match Requests",
+    "tabs": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "pending": "No pending match requests",
+      "accepted": "No accepted matches",
+      "rejected": "No rejected matches"
+    },
+    "actions": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "openChat": "Open Chat"
+    },
+    "status": {
+      "accepted": "Match accepted",
+      "rejected": "Match rejected",
+      "waiting": "Waiting",
+      "matched": "Matched",
+      "ended": "Ended"
+    },
+    "success": {
+      "accept": "Match accepted successfully",
+      "reject": "Match rejected successfully",
+      "match": "Match successful"
+    },
+    "errors": {
+      "fetch": "Error fetching matches",
+      "accept": "Error accepting match",
+      "reject": "Error rejecting match",
+      "match": "Match failed",
+      "count": "Inexperienced pending count is greater than 4"
+    },
+    "sections": {
+      "active": "Active Matches",
+      "waiting": "Waiting Matches",
+      "past": "Past Matches"
+    },
+    "notifications": {
+      "new": "A mentee sent you a mentoring request!",
+      "title": "New Mentee Match"
+    },
+    "search": {
+      "placeholder": "Search by name or email..."
+    }
+  },
+  "chats": "Chats",
+  "categoryFetchError": "An error occurred while loading categories.",
+  "goalAddSuccess": "Goal added successfully",
+  "goalAddError": "An error occurred while adding the goal",
+  "goalDeleteSuccess": "Goal deleted successfully",
+  "goalDeleteError": "An error occurred while deleting the goal",
+
+  "skill": {
+    "name": "Skill Name",
+    "description": "Skill Description",
+    "level": "Skill Level",
+    "add": "Add Skill",
+    "edit": "Edit Skills",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveSuccess": "Skills saved successfully",
+    "saveError": "Error saving skills",
+    "empty": "No skills added yet",
+    "placeholder": {
+      "name": "E.g: JavaScript",
+      "description": "Write a brief description about this skill"
+    }
+  },
+
+  "profile": {
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "uploadPhoto": "Upload Photo",
+    "changePhoto": "Change Photo",
+    "galleryPermissionRequired": "Gallery access permission required",
+    "sections": {
+      "badges": "Badges",
+      "certificates": "Certificates",
+      "educations": "Education",
+      "skills": "Skills",
+      "experiences": "Experience",
+      "categories": "Categories",
+      "goals": "Goals",
+      "contact": "Contact"
+    }
+  },
+
+  "education": {
+    "name": "School Name",
+    "description": "Description",
+    "level": "Education Level",
+    "add": "Add Education",
+    "edit": "Edit Education",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveSuccess": "Education information saved successfully",
+    "saveError": "Error saving education information",
+    "empty": "No education information added yet",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "current": "Currently Enrolled",
+    "degree": "Degree",
+    "field": "Field of Study",
+    "grade": "Grade",
+    "activities": "Activities and Societies",
+    "placeholder": {
+      "name": "E.g: Harvard University",
+      "description": "Write a brief description about your education"
+    }
+  },
+
+  "experience": {
+    "name": "Position",
+    "company": "Company",
+    "location": "Location",
+    "description": "Description",
+    "add": "Add Experience",
+    "edit": "Edit Experience",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveSuccess": "Experience information saved successfully",
+    "saveError": "Error saving experience information",
+    "empty": "No experience added yet",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "current": "I currently work here",
+    "relatedSkills": "Related Skills",
+    "placeholder": {
+      "name": "E.g: Software Engineer",
+      "company": "E.g: Google",
+      "description": "Your responsibilities and achievements in this position"
+    }
+  },
+
+  "certificate": {
+    "name": "Certificate Name",
+    "organization": "Organization",
+    "description": "Description",
+    "add": "Add Certificate",
+    "edit": "Edit Certificates",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveSuccess": "Certificate saved successfully",
+    "saveError": "Error saving certificate",
+    "empty": "No certificates added yet",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "credential": "Credential ID",
+    "url": "Certificate URL",
+    "placeholder": {
+      "name": "E.g: AWS Solutions Architect",
+      "organization": "E.g: Amazon Web Services",
+      "description": "Brief description about the certificate"
+    }
+  }
 }

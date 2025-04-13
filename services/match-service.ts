@@ -11,15 +11,23 @@ class MatchService {
     successCallback: () => void,
     errorCallback: () => void
   ): Promise<Match[]> {
-    const response: ServiceResponse<Match[]> = (
-      await api.get(`${this.endpoint}/${id}`)
-    ).data;
-    if (response.isSuccessful) {
-      successCallback();
-      return response.data;
+    try {
+      console.log("Fetching matches for user:", id);
+      const response: ServiceResponse<Match[]> = (
+        await api.get(`${this.endpoint}/${id}`)
+      ).data;
+      console.log("Match service response:", response);
+      if (response.isSuccessful) {
+        successCallback();
+        return response.data;
+      }
+      errorCallback();
+      return [];
+    } catch (error) {
+      console.error("Error in match service:", error);
+      errorCallback();
+      return [];
     }
-    errorCallback();
-    return [];
   }
 
   async create(
@@ -41,6 +49,27 @@ class MatchService {
       toastrService.error(i18n.t(error.response.data.errors[0]));
     }
   }
+
+  async createCommunity(
+    model: Partial<Match>,
+    successCallback: (data: Match) => void,
+    errorCallback: () => void
+  ) {
+    try {
+      const response: ServiceResponse<Match> = (
+        await api.post(this.endpoint + "/community", model)
+      ).data;
+      if (response.isSuccessful) {
+        successCallback(response.data);
+        return response.data;
+      }
+      errorCallback();
+      return null;
+    } catch (error: any) {
+      toastrService.error(i18n.t(error.response.data.errors[0]));
+    }
+  }
+
   async accept(
     matchId: string,
     successCallback: () => void,

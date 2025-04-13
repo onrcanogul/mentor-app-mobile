@@ -1,360 +1,298 @@
 import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  BackHandler,
-  Platform,
-} from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text, TextInput, IconButton, Surface } from "react-native-paper";
 import { Skill } from "../../../../domain/skill";
-import { Experience } from "../../../../domain/experience";
 import toastrService from "../../../../services/toastr-service";
 import mentorService from "../../../../services/mentor-service";
-import changeNavigationBarColor from "react-native-navigation-bar-color";
 import userService from "../../../../services/user-service";
 import { useTranslation } from "react-i18next";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import Slider from "@react-native-community/slider";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import BaseEditModal from "../../../common/BaseEditModal";
 
-interface Props {
+interface SkillEditModalProps {
   visible: boolean;
   skills: Skill[];
   onClose: () => void;
   onSave: (updated: Skill[]) => void;
 }
 
-const SkillEditModal: React.FC<Props> = ({
+const SkillEditModal: React.FC<SkillEditModalProps> = ({
   visible,
   skills,
   onClose,
   onSave,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [editedSkills, setEditedSkills] = useState<Skill[]>([]);
-  const [newSkill, setNewSkill] = useState({
+  const [newSkill, setNewSkill] = useState<Partial<Skill>>({
     name: "",
     description: "",
-    level: 1,
+    level: 50,
   });
 
   useEffect(() => {
     setEditedSkills(skills);
   }, [skills]);
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (visible) {
-          onClose();
-          return true;
-        }
-        return false;
+  const handleSave = async () => {
+    try {
+      const userId = (await userService.getCurrentUser()).id;
+      const result = await mentorService.saveSkills(userId, editedSkills);
+
+      if (result) {
+        toastrService.success(t("skillSaveSuccess"));
+        onSave(editedSkills);
+        onClose();
+      } else {
+        toastrService.error(t("skillSaveError"));
       }
-    );
-
-    return () => backHandler.remove();
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && Platform.OS === "android") {
-      // changeNavigationBarColor("#121212", false);
+    } catch (error) {
+      toastrService.error(t("skillSaveError"));
     }
-  }, [visible]);
-
-  const updateSkill = (
-    index: number,
-    field: keyof Skill,
-    value: string | number
-  ) => {
-    const updated = [...editedSkills];
-    (updated[index] as any)[field] = value;
-    setEditedSkills(updated);
   };
 
-  const deleteSkill = (index: number) => {
+  const handleAddSkill = () => {
+    if (newSkill.name) {
+      const skill: Skill = {
+        id: Date.now().toString(),
+        name: newSkill.name,
+        description: newSkill.description,
+        level: newSkill.level || 50,
+        experiences: [],
+        createdBy: "USER",
+      };
+
+      setEditedSkills([...editedSkills, skill]);
+      setNewSkill({
+        name: "",
+        description: "",
+        level: 50,
+      });
+    }
+  };
+
+  const handleDeleteSkill = (index: number) => {
     const updated = [...editedSkills];
     updated.splice(index, 1);
     setEditedSkills(updated);
   };
 
-  const addSkill = () => {
-    if (!newSkill.name) return;
-
-    const newItem: Skill = {
-      name: newSkill.name,
-      description: newSkill.description,
-      level: newSkill.level,
-      experiences: [],
-      createdBy: "SYSTEM",
-    };
-
-    setEditedSkills((prev) => [...prev, newItem]);
-
-    setNewSkill({
-      name: "",
-      description: "",
-      level: 1,
-    });
-  };
-
-  const saveChanges = async () => {
-    const result = await mentorService.saveSkills(
-      (
-        await userService.getCurrentUser()
-      ).id,
-      editedSkills
-    );
-    if (result) {
-      toastrService.success(t("SkillSuccessSave"));
-      onSave(editedSkills);
-      onClose();
-    } else {
-      toastrService.error(t("SkillErrorSave"));
-    }
-  };
-
   return (
-    <Modal
+    <BaseEditModal
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
+      onClose={onClose}
+      title={t("editSkills")}
+      onSave={handleSave}
+      saveDisabled={editedSkills.length === 0}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}> {t("editSkillsTitle")}</Text>
+      <View style={styles.container}>
+        <Surface
+          style={[
+            styles.addSection,
+            { backgroundColor: theme.colors.card.background },
+          ]}
+        >
+          <TextInput
+            mode="outlined"
+            label={t("skill.name")}
+            value={newSkill.name}
+            onChangeText={(name) => setNewSkill({ ...newSkill, name })}
+            style={styles.input}
+            outlineColor={theme.colors.input.border}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            placeholderTextColor={theme.colors.text.disabled}
+          />
+          <TextInput
+            mode="outlined"
+            label={t("skill.description")}
+            value={newSkill.description}
+            onChangeText={(description) =>
+              setNewSkill({ ...newSkill, description })
+            }
+            style={styles.input}
+            multiline
+            numberOfLines={3}
+            outlineColor={theme.colors.input.border}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            placeholderTextColor={theme.colors.text.disabled}
+          />
 
-          {/* Yeni Yetenek Ekleme */}
-          <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>{t("addNewSkill")}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Yetenek Adı"
-              placeholderTextColor="#888"
-              value={newSkill.name}
-              onChangeText={(text) => setNewSkill({ ...newSkill, name: text })}
+          <View style={styles.sliderContainer}>
+            <Text
+              style={[styles.sliderLabel, { color: theme.colors.text.primary }]}
+            >
+              {t("skill.level")}: {newSkill.level}%
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={100}
+              step={1}
+              value={newSkill.level}
+              onValueChange={(level) => setNewSkill({ ...newSkill, level })}
+              minimumTrackTintColor={theme.colors.primary.main}
+              maximumTrackTintColor={theme.colors.text.disabled}
+              thumbTintColor={theme.colors.primary.main}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Açıklama"
-              placeholderTextColor="#888"
-              value={newSkill.description}
-              onChangeText={(text) =>
-                setNewSkill({ ...newSkill, description: text })
-              }
-            />
-            <View style={styles.starsContainer}>
-              <Text style={styles.sliderLabel}>{t("level")}:</Text>
-              <View style={{ flexDirection: "row" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => setNewSkill({ ...newSkill, level: star })}
-                  >
-                    <FontAwesome
-                      name={star <= newSkill.level ? "star" : "star-o"}
-                      size={24}
-                      color="#FFD700"
-                      style={{ marginRight: 4 }}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <TouchableOpacity onPress={addSkill} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ {t("add")}</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Mevcut Yetenekler */}
-          <ScrollView style={{ maxHeight: 300 }}>
-            {editedSkills.map((skill, index) => (
-              <View key={skill.id || index} style={styles.skillItem}>
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("skillNamePlaceholder")}
-                  placeholderTextColor="#888"
-                  value={skill.name}
-                  onChangeText={(text) => updateSkill(index, "name", text)}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("skillDescriptionPlaceholder")}
-                  placeholderTextColor="#888"
-                  value={skill.description ?? ""}
-                  onChangeText={(text) =>
-                    updateSkill(index, "description", text)
-                  }
-                />
-                <View style={styles.starsContainer}>
-                  <Text style={styles.sliderLabel}>{t("level")}:</Text>
-                  <View style={{ flexDirection: "row" }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <TouchableOpacity
-                        key={star}
-                        onPress={() => updateSkill(index, "level", star)}
-                      >
-                        <FontAwesome
-                          name={star <= skill.level ? "star" : "star-o"}
-                          size={24}
-                          color="#FFD700"
-                          style={{ marginRight: 4 }}
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+          <IconButton
+            icon="plus-circle"
+            size={50}
+            iconColor={theme.colors.primary.main}
+            onPress={handleAddSkill}
+            disabled={!newSkill.name}
+            style={[styles.addButton, !newSkill.name && { opacity: 0.5 }]}
+            accessibilityLabel={t("skill.add")}
+          />
+        </Surface>
 
-                <Text style={styles.label}> {t("relatedExperiences")}</Text>
-                {skill.experiences?.length > 0 ? (
-                  skill.experiences.map((exp: Experience) => (
-                    <Text key={exp.id} style={styles.experienceItem}>
-                      • {exp.company} - {exp.title}
-                    </Text>
-                  ))
-                ) : (
-                  <Text style={{ color: "#999", marginLeft: 10 }}>
-                    {t("noExperienceLinked")}
-                  </Text>
-                )}
-
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => deleteSkill(index)}
+        <View style={styles.skillsList}>
+          {editedSkills.map((skill, index) => (
+            <Animated.View
+              key={skill.id}
+              entering={FadeInDown.delay(index * 50)}
+              style={[
+                styles.skillItem,
+                { backgroundColor: theme.colors.card.background },
+              ]}
+            >
+              <View style={styles.skillHeader}>
+                <Text
+                  style={[
+                    styles.skillName,
+                    { color: theme.colors.text.primary },
+                  ]}
                 >
-                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
-                </TouchableOpacity>
+                  {skill.name}
+                </Text>
+                <IconButton
+                  icon="delete"
+                  size={20}
+                  iconColor={theme.colors.text.secondary}
+                  onPress={() => handleDeleteSkill(index)}
+                />
               </View>
-            ))}
-          </ScrollView>
 
-          {/* Kaydet / İptal */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>{t("cancel")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>{t("save")}</Text>
-            </TouchableOpacity>
-          </View>
+              {skill.description && (
+                <Text
+                  style={[
+                    styles.skillDescription,
+                    { color: theme.colors.text.secondary },
+                  ]}
+                >
+                  {skill.description}
+                </Text>
+              )}
+
+              <View style={styles.skillLevelContainer}>
+                <View
+                  style={[
+                    styles.skillLevelBar,
+                    {
+                      backgroundColor: theme.colors.text.disabled,
+                      width: "100%",
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.skillLevelFill,
+                      {
+                        backgroundColor: theme.colors.primary.main,
+                        width: `${skill.level}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.skillLevelText,
+                    { color: theme.colors.text.secondary },
+                  ]}
+                >
+                  {skill.level}%
+                </Text>
+              </View>
+            </Animated.View>
+          ))}
         </View>
       </View>
-    </Modal>
+    </BaseEditModal>
   );
 };
 
-export default SkillEditModal;
-
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "90%",
-    backgroundColor: "#1E1E1E",
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFD700",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFF",
-    marginBottom: 10,
   },
   addSection: {
-    marginBottom: 20,
-  },
-  skillItem: {
-    marginBottom: 20,
-    backgroundColor: "#292929",
-    padding: 10,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   input: {
-    backgroundColor: "#3A3A3A",
-    color: "#FFF",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  label: {
-    color: "#FFD700",
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-  experienceItem: {
-    color: "#DDD",
-    fontSize: 14,
-    marginLeft: 10,
-  },
-  deleteButton: {
-    backgroundColor: "#AA3333",
-    padding: 8,
-    borderRadius: 5,
-    marginTop: 10,
-    alignSelf: "flex-end",
-  },
-  deleteButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  addButton: {
-    backgroundColor: "#444",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  addButtonText: {
-    color: "#FFF",
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-  },
-  cancelButton: {
-    backgroundColor: "#888",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 5,
-  },
-  saveButton: {
-    backgroundColor: "#FFD700",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginLeft: 5,
-  },
-  buttonText: {
-    textAlign: "center",
-    fontWeight: "bold",
-    color: "#000",
-  },
-  starsContainer: {
-    marginBottom: 15,
+  sliderContainer: {
+    marginBottom: 12,
   },
   sliderLabel: {
-    color: "#FFF",
     fontSize: 14,
-    marginBottom: 5,
+    marginBottom: 8,
+  },
+  slider: {
+    height: 40,
+  },
+  addButton: {
+    alignSelf: "center",
+    marginTop: 8,
+  },
+  skillsList: {
+    gap: 12,
+  },
+  skillItem: {
+    padding: 16,
+    borderRadius: 12,
+  },
+  skillHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  skillName: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  skillDescription: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  skillLevelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    gap: 8,
+  },
+  skillLevelBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  skillLevelFill: {
+    height: "100%",
+  },
+  skillLevelText: {
+    fontSize: 12,
+    minWidth: 35,
+    textAlign: "right",
   },
 });
+
+export default SkillEditModal;

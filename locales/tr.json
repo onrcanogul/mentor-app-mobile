@@ -3,6 +3,8 @@
 
   "homeMentor": "Mentor Olarak Devam Et",
   "homeMentee": "Mentee Olarak Devam Et",
+  "homeGeneral": "Topluluk Üyesi Olarak Devam Et",
+  "communityMember": "Topluluk Üyesi",
 
   "welcomeAIMessage": "Merhaba! Ben senin kişisel AI asistanınım. Dilediğin konularda soru sorabilir, kariyerinle ilgili rehberlik alabilirsin.",
   "chatTitle": "Konuşma başlığı...",
@@ -11,7 +13,25 @@
 
   "categoryEditTitle": "Kategorileri Seç",
 
-  "profile": "Profil",
+  "profile": {
+    "edit": "Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "uploadPhoto": "Fotoğraf Yükle",
+    "changePhoto": "Fotoğrafı Değiştir",
+    "galleryPermissionRequired": "Galeri erişim izni gerekli",
+    "sections": {
+      "badges": "Rozetler",
+      "certificates": "Sertifikalar",
+      "educations": "Eğitimler",
+      "skills": "Yetenekler",
+      "experiences": "Deneyimler",
+      "categories": "Kategoriler",
+      "goals": "Hedefler",
+      "contact": "İletişim"
+    }
+  },
+
   "badges": "Rozetler",
   "certificates": "Sertifikalar",
   "educations": "Eğitimler",
@@ -99,16 +119,30 @@
 
   "login": "Giriş Yap",
   "logout": "Çıkış Yap",
-  "emailOrUsername": "E-Posta veya Kullanıcı adı",
+  "emailOrUsername": "E-posta veya Kullanıcı Adı",
   "password": "Şifre",
   "sureLogout": "Çıkış yapmak istediğinize emin misiniz?",
   "cancel": "İptal",
-  "dontHaveAccount": "Hesabınız yok mu? Kayıt Ol",
-  "alreadyHaveAccount": "Hesabınız zaten var mı? Giriş Yap",
+  "dontHaveAccount": "Hesabın yok mu?",
+  "alreadyHaveAccount": "Zaten hesabın var mı?",
+  "signUp": "Kayıt Ol",
+  "welcomeBack": "Tekrar Hoşgeldin!",
+  "createAccount": "Hesap Oluştur",
+  "passwordsDoNotMatch": "Şifreler eşleşmiyor",
+  "registerSuccess": "Kayıt başarılı!",
+  "loginSuccess": "Giriş başarılı!",
+
+  "mentor": "Mentor",
+  "mentee": "Mentee",
+  "homeDescription": "Öğrenme yolculuğunda bir sonraki adımını seç",
+
+  "home0Description": "Deneyimlerinizi paylaşın ve yeni yetenekleri keşfedin",
+  "home1Description": "Mentorunuzla birlikte hedeflerinize ulaşın",
+  "home2Description": "Topluluğa katılın ve deneyimleri paylaşın",
 
   "fullName": "Ad Soyad",
   "register": "Kayıt Ol",
-  "email": "E-Posta",
+  "email": "E-posta",
   "username": "Kullanıcı Adı",
   "confirmPassword": "Şifreyi Onayla",
 
@@ -125,6 +159,7 @@
   "account": "Hesap",
   "profileInfos": "Profil Bilgileri",
   "profileDescription": "Kullanıcı adı ve e-postanı güncelle",
+  "profileBar": "Profil",
   "changePasswordTitle": "Şifreni Değiştir",
   "changePasswordDescription": "Hesap şifreni güncelle",
   "darkMode": "Karanlık Mod",
@@ -204,28 +239,167 @@
   "chatNotFound": "Sohbet bulunamadı.",
   "noChatAssociated": "Bu sohbetle ilişkili bir sohbet yok.",
 
+  "editCertificate": "Sertifikayı Düzenle",
+  "certificateName": "Sertifika Adı",
+  "description": "Açıklama",
+  "from": "Nereden",
+  "certificateSaveSuccess": "Sertifika başarıyla kaydedildi!",
+  "certificateSaveError": "Sertifika kaydetme hatası.",
+
   "categorySaveSuccess": "Kategori başarıyla kaydedildi.",
   "categorySaveError": "Kategori kaydedilemedi.",
   "searchCategory": "Kategori ara",
   "selectCategory": "Kategori seç",
-  "save": "Kaydet",
   "matchAccepted": "Eşleşme kabul edildi.",
   "matchRejected": "Eşleşme reddedildi.",
   "categoryAddSuccess": "Kategori başarıyla eklendi.",
   "categoryAddError": "Kategori eklenemedi.",
   "certificateSuccessSave": "Sertifika başarıyla kaydedildi.",
   "certificateErrorSave": "Sertifika kaydedilemedi.",
-  "certificateName": "Sertifika adı",
-  "description": "Açıklama",
   "company": "Şirket",
   "SkillSuccessSave": "Yetenek başarıyla kaydedildi.",
   "SkillErrorSave": "Yetenek kaydedilemedi.",
-  "loginSuccess": "Giriş başarılı.",
-  "registerSuccess": "Kayıt başarılı.",
-  "registerError": "Kayıt başarısız.",
   "aiChatRedirect": "AI Sohbet başlatıldı, yönlendiriliyor...",
   "chatStartFailed": "Sohbet başlatılamadı.",
   "matchSuccess": "Eşleşme başarılı.",
   "matchError": "Eşleşme başarısız.",
-  "logoutSuccess": "Çıkış başarılı."
+  "logoutSuccess": "Çıkış başarılı.",
+  "title": "Eşleşme İstekleri",
+  "tabs": {
+    "pending": "Bekleyen",
+    "accepted": "Kabul Edilenler",
+    "rejected": "Reddedilenler"
+  },
+  "match": {
+    "title": "Eşleşme İstekleri",
+    "tabs": {
+      "pending": "Bekleyen",
+      "accepted": "Kabul Edilenler",
+      "rejected": "Reddedilenler"
+    },
+    "empty": {
+      "pending": "Bekleyen eşleşme isteği bulunmuyor",
+      "accepted": "Kabul edilen eşleşme bulunmuyor",
+      "rejected": "Reddedilen eşleşme bulunmuyor"
+    },
+    "actions": {
+      "accept": "Kabul Et",
+      "reject": "Reddet",
+      "openChat": "Sohbete Git"
+    },
+    "status": {
+      "accepted": "Kabul Edildi",
+      "rejected": "Reddedildi",
+      "pending": "Beklemede"
+    },
+    "success": {
+      "accept": "Eşleşme başarıyla kabul edildi",
+      "reject": "Eşleşme başarıyla reddedildi"
+    },
+    "errors": {
+      "accept": "Eşleşme kabul edilirken bir hata oluştu",
+      "reject": "Eşleşme reddedilirken bir hata oluştu"
+    },
+    "sections": {
+      "active": "Aktif Eşleşmeler",
+      "waiting": "Bekleyen Eşleşmeler",
+      "past": "Geçmiş Eşleşmeler"
+    },
+    "notifications": {
+      "new": "Bir mentee sana mentorluk talebi gönderdi!",
+      "title": "Yeni Mentee Eşleşmesi"
+    }
+  },
+  "chats": "Sohbetler",
+  "categoryFetchError": "Kategoriler yüklenirken bir hata oluştu.",
+  "goalAddSuccess": "Hedef başarıyla eklendi",
+  "goalAddError": "Hedef eklenirken bir hata oluştu",
+  "goalDeleteSuccess": "Hedef başarıyla silindi",
+  "goalDeleteError": "Hedef silinirken bir hata oluştu",
+
+  "skill": {
+    "name": "Yetenek Adı",
+    "description": "Yetenek Açıklaması",
+    "level": "Yetenek Seviyesi",
+    "add": "Yetenek Ekle",
+    "edit": "Yetenekleri Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saveSuccess": "Yetenekler başarıyla kaydedildi",
+    "saveError": "Yetenekler kaydedilirken bir hata oluştu",
+    "empty": "Henüz yetenek eklenmemiş",
+    "placeholder": {
+      "name": "Örn: JavaScript",
+      "description": "Bu yetenek hakkında kısa bir açıklama yazın"
+    }
+  },
+
+  "education": {
+    "name": "Okul Adı",
+    "description": "Açıklama",
+    "level": "Eğitim Seviyesi",
+    "add": "Eğitim Ekle",
+    "edit": "Eğitimleri Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saveSuccess": "Eğitim bilgileri başarıyla kaydedildi",
+    "saveError": "Eğitim bilgileri kaydedilirken bir hata oluştu",
+    "empty": "Henüz eğitim bilgisi eklenmemiş",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "current": "Devam Ediyor",
+    "degree": "Derece",
+    "field": "Alan",
+    "grade": "Not Ortalaması",
+    "activities": "Aktiviteler ve Topluluklar",
+    "placeholder": {
+      "name": "Örn: Boğaziçi Üniversitesi",
+      "description": "Eğitiminiz hakkında kısa bir açıklama yazın"
+    }
+  },
+
+  "experience": {
+    "name": "Pozisyon",
+    "company": "Şirket",
+    "location": "Konum",
+    "description": "Açıklama",
+    "add": "Deneyim Ekle",
+    "edit": "Deneyimleri Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saveSuccess": "Deneyim bilgileri başarıyla kaydedildi",
+    "saveError": "Deneyim bilgileri kaydedilirken bir hata oluştu",
+    "empty": "Henüz deneyim eklenmemiş",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "current": "Halen Çalışıyorum",
+    "relatedSkills": "İlgili Yetenekler",
+    "placeholder": {
+      "name": "Örn: Yazılım Mühendisi",
+      "company": "Örn: Google",
+      "description": "Bu pozisyondaki sorumluluklarınız ve başarılarınız"
+    }
+  },
+
+  "certificate": {
+    "name": "Sertifika Adı",
+    "organization": "Kurum",
+    "description": "Açıklama",
+    "add": "Sertifika Ekle",
+    "edit": "Sertifikaları Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saveSuccess": "Sertifika başarıyla kaydedildi",
+    "saveError": "Sertifika kaydedilirken bir hata oluştu",
+    "empty": "Henüz sertifika eklenmemiş",
+    "issueDate": "Veriliş Tarihi",
+    "expiryDate": "Geçerlilik Tarihi",
+    "credential": "Kimlik No",
+    "url": "Sertifika URL",
+    "placeholder": {
+      "name": "Örn: AWS Solutions Architect",
+      "organization": "Örn: Amazon Web Services",
+      "description": "Sertifika hakkında kısa bir açıklama"
+    }
+  }
 }

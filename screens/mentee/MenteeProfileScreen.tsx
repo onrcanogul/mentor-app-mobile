@@ -1,19 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  RefreshControl,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { Card, Text, Avatar, IconButton } from "react-native-paper";
+import { View, ScrollView, StyleSheet, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import GoalList from "../../components/mentee/profile/GoalList";
-import ContactInfo from "../../components/mentee/profile/ContactInfo";
-import CategorySelection from "../../components/mentee/profile/CategorySelection";
-import MeetingStats from "../../components/mentee/profile/MeetingStats";
 import ContactEditModal from "../../components/mentee/profile/modals/ContactEditModal";
 import CategoryEditModal from "../../components/mentee/profile/modals/CategoryEditModal";
 import GoalsEditModal from "../../components/mentee/profile/modals/GoalEditModal";
@@ -22,19 +11,22 @@ import CategoryList from "../../components/mentor/profile/CategoryList";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import userService from "../../services/user-service";
 import menteeService from "../../services/mentee-service";
 import toastrService from "../../services/toastr-service";
 import { Mentee } from "../../domain/mentee";
 import { Contact } from "../../domain/contact";
-import api from "../../services/axios/axiosInstance";
 import LoadingSpinner from "../../utils/spinner";
+import ProfileCard from "../../components/common/ProfileCard";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 const MenteeProfileScreen = () => {
   const { t } = useTranslation();
   const route = useRoute();
   const navigator = useNavigation();
   const { setRole, setAuthenticated } = useAuth();
+  const { theme } = useTheme();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [mentee, setMentee] = useState<Mentee>();
@@ -47,7 +39,7 @@ const MenteeProfileScreen = () => {
   });
   const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [categories, setCategories] = useState(mentee?.categories);
+  const [categories, setCategories] = useState(mentee?.user.categories);
   const [isLoading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -66,11 +58,8 @@ const MenteeProfileScreen = () => {
     if (mentee) {
       setMentee(mentee);
       setGoals(mentee.goals);
-      setCategories(mentee.categories);
+      setCategories(mentee.user.categories);
       setContact({ email: mentee.user.email });
-      console.log(mentee.user.imageUrl);
-      console.log(mentee);
-      console.log(goals);
     }
     setLoading(false);
   }
@@ -81,7 +70,7 @@ const MenteeProfileScreen = () => {
     setRole(null);
     setAuthenticated(false);
     setTimeout(() => {
-      navigator.navigate("Home");
+      navigator.navigate("Home" as never);
     }, 1000);
   };
 
@@ -110,9 +99,14 @@ const MenteeProfileScreen = () => {
     }
   };
 
-  if (!mentee || !mentee.categories || !mentee.goals) {
+  if (!mentee || !mentee.user.categories || !mentee.goals) {
     return (
-      <SafeAreaView style={styles.safeContainer}>
+      <SafeAreaView
+        style={[
+          styles.safeContainer,
+          { backgroundColor: theme.colors.background.primary },
+        ]}
+      >
         <LoadingSpinner visible={!mentee} />
       </SafeAreaView>
     );
@@ -120,98 +114,76 @@ const MenteeProfileScreen = () => {
 
   return (
     <>
-      <SafeAreaView style={styles.safeContainer}>
+      <SafeAreaView
+        style={[
+          styles.safeContainer,
+          { backgroundColor: theme.colors.background.primary },
+        ]}
+      >
         <ScrollView
           style={styles.container}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
               onRefresh={fetch}
-              tintColor="#FFD700"
+              tintColor={theme.colors.primary.main}
             />
           }
+          showsVerticalScrollIndicator={false}
         >
-          {/* Profil Başlığı */}
-          <Card style={styles.profileCard}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={isOwn ? handleImageUpload : undefined}>
-                {mentee.user.imageUrl ? (
-                  <Image
-                    source={{ uri: mentee.user.imageUrl }}
-                    style={styles.avatarImage}
-                  />
-                ) : (
-                  <Image
-                    source={{
-                      uri: `https://ui-avatars.com/api/?name=OnurcanOgul`,
-                    }}
-                    style={styles.avatarImage}
-                  />
-                )}
-              </TouchableOpacity>
-
-              <View style={styles.nameSection}>
-                <Text style={styles.nameText}>{mentee.user.username}</Text>
-                <Text style={styles.roleText}>Mentee</Text>
-                <Text style={styles.roleText}>{contact.email}</Text>
-              </View>
-
-              {isOwn && (
-                <View style={styles.actionButtons}>
-                  <IconButton
-                    icon="cog"
-                    iconColor="#FFD700"
-                    size={22}
-                    onPress={() => navigator.navigate("Settings")}
-                  />
-                  <IconButton
-                    icon="logout"
-                    iconColor="#FF6B6B"
-                    size={22}
-                    onPress={() => setLogoutDialogVisible(true)}
-                  />
-                </View>
-              )}
-            </View>
-          </Card>
-
-          {/* Kategoriler */}
-          <CategoryList
-            categories={mentee.categories!}
-            onEdit={() => setCategoryModalVisible(true)}
+          <ProfileCard
+            username={mentee.user.username}
+            email={mentee.user.email}
+            imageUrl={mentee.user.imageUrl}
+            role="Mentee"
             isOwn={isOwn}
-          />
-          {/* Hedefler */}
-          <GoalList
-            goals={goals!}
-            onEdit={() => setGoalModalVisible(true)}
-            isOwn={isOwn}
+            onImagePress={handleImageUpload}
+            onLogoutPress={() => setLogoutDialogVisible(true)}
           />
 
-          {/* Modals */}
-          {isOwn && (
-            <>
-              <GoalsEditModal
-                visible={goalModalVisible}
-                goals={mentee.goals!}
-                onClose={() => setGoalModalVisible(false)}
-                onSave={(updated) => setGoals(updated)}
-              />
-              <ContactEditModal
-                visible={contactModalVisible}
-                contact={contact}
-                onClose={() => setContactModalVisible(false)}
-                onSave={(updated) => setContact(updated)}
-              />
-              <CategoryEditModal
-                visible={categoryModalVisible}
-                categories={mentee?.categories ?? []}
-                onClose={() => setCategoryModalVisible(false)}
-                onSave={(updated) => setCategories(updated)}
-              />
-            </>
-          )}
+          <View style={styles.content}>
+            <CategoryList
+              categories={mentee.user.categories!}
+              onEdit={() => setCategoryModalVisible(true)}
+              isOwn={isOwn}
+            />
+
+            <View style={styles.divider} />
+
+            <GoalList
+              goals={goals!}
+              onEdit={() => setGoalModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </View>
         </ScrollView>
+
+        {isOwn && (
+          <>
+            <GoalsEditModal
+              visible={goalModalVisible}
+              goals={mentee.goals!}
+              onClose={() => setGoalModalVisible(false)}
+              onSave={(updated) => setGoals(updated)}
+            />
+            <ContactEditModal
+              visible={contactModalVisible}
+              contact={contact}
+              onClose={() => setContactModalVisible(false)}
+              onSave={(updated) => setContact(updated)}
+            />
+            <CategoryEditModal
+              visible={categoryModalVisible}
+              categories={mentee?.user.categories ?? []}
+              onClose={() => setCategoryModalVisible(false)}
+              onSave={async (updated) => {
+                setCategories(updated);
+                setCategoryModalVisible(false);
+                await fetch();
+              }}
+            />
+          </>
+        )}
 
         <ConfirmationModal
           visible={logoutDialogVisible}
@@ -229,48 +201,18 @@ const MenteeProfileScreen = () => {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#121212",
   },
   container: {
     flex: 1,
-    backgroundColor: "#121212",
   },
-  profileCard: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 20,
-    marginBottom: 15,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatarImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-  avatarFallback: {
-    backgroundColor: "#333",
-  },
-  nameSection: {
-    marginLeft: 15,
+  content: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  nameText: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  roleText: {
-    color: "#A0A0A0",
-    fontSize: 14,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 5,
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginVertical: 24,
   },
 });
 

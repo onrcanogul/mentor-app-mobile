@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setAuthenticated(isAuth);
         if (user?.role === "Mentor") setRole(UserType.Mentor);
         else if (user?.role === "Mentee") setRole(UserType.Mentee);
+        else if (user?.role === "General") setRole(UserType.General);
       } catch (err) {
         console.error("Auth check error:", err);
       } finally {

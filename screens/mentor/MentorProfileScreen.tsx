@@ -4,12 +4,14 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  Image,
-  TouchableOpacity,
+  Platform,
 } from "react-native";
-import { Card, Text, Avatar, IconButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
+import { useTheme } from "../../contexts/ThemeContext";
+import { LinearGradient } from "expo-linear-gradient";
 import userService from "../../services/user-service";
 import { Mentor } from "../../domain/mentor";
 import { Badge } from "../../domain/badge";
@@ -35,11 +37,15 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import LoadingSpinner from "../../utils/spinner";
+import ProfileCard from "../../components/common/ProfileCard";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 const MentorProfileScreen = () => {
   const { t } = useTranslation();
   const route = useRoute();
-  const navigator = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { theme } = useTheme();
   const [mentor, setMentor] = useState<Mentor>();
   const { setRole, setAuthenticated } = useAuth();
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -75,7 +81,7 @@ const MentorProfileScreen = () => {
       setEducations(fetchedMentor.educations || []);
       setSkills(fetchedMentor.skills || []);
       setExperiences(fetchedMentor.experiences || []);
-      setCategories(fetchedMentor.categories || []);
+      setCategories(fetchedMentor.user.categories || []);
     }
     setLoading(false);
   };
@@ -83,7 +89,7 @@ const MentorProfileScreen = () => {
   const handleImageUpload = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      alert("Galeriye erişim izni gerekli.");
+      alert(t("galleryPermissionRequired"));
       return;
     }
 
@@ -102,6 +108,7 @@ const MentorProfileScreen = () => {
       };
 
       await userService.uploadProfilePhoto(file, mentor.userId);
+      await fetchMentor();
     }
   };
 
@@ -110,8 +117,41 @@ const MentorProfileScreen = () => {
     toastrService.success(t("logoutSuccess"));
     setRole(null);
     setAuthenticated(false);
-    navigator.navigate("Home");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
   };
+
+  const styles = StyleSheet.create({
+    safeContainer: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    headerGradient: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 150,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingBottom: 32,
+    },
+    sectionContainer: {
+      marginBottom: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.background.tertiary,
+    },
+    lastSection: {
+      borderBottomWidth: 0,
+    },
+  });
 
   if (!mentor || !mentor.user) {
     return (
@@ -122,83 +162,89 @@ const MentorProfileScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+    >
       <ScrollView
-        style={styles.container}
+        style={[styles.container]}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={fetchMentor}
-            tintColor="#FFD700"
+            tintColor={theme.colors.primary.main}
           />
         }
+        showsVerticalScrollIndicator={false}
       >
-        <Card style={styles.profileCard}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={isOwn ? handleImageUpload : undefined}>
-              {mentor.user.imageUrl ? (
-                <Image
-                  source={{ uri: mentor.user.imageUrl }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Image
-                  source={{
-                    uri: `https://ui-avatars.com/api/?name=OnurcanOgul`,
-                  }}
-                  style={styles.avatarImage}
-                />
-              )}
-            </TouchableOpacity>
-            <View style={styles.nameSection}>
-              <Text style={styles.nameText}>{mentor.user.username}</Text>
-              <Text style={styles.roleText}>Mentor</Text>
-              <Text style={styles.roleText}>{mentor.user.email}</Text>
-            </View>
-            {isOwn && (
-              <View style={styles.actionButtons}>
-                <IconButton
-                  icon="translate"
-                  iconColor="#FFD700"
-                  size={22}
-                  onPress={() => navigator.navigate("Settings")}
-                />
-                <IconButton
-                  icon="logout"
-                  iconColor="#FF6B6B"
-                  size={22}
-                  onPress={() => setLogoutDialogVisible(true)}
-                />
-              </View>
-            )}
-          </View>
-        </Card>
+        <ProfileCard
+          username={mentor.user.username}
+          email={mentor.user.email}
+          imageUrl={mentor.user.imageUrl}
+          role="Mentor"
+          isOwn={isOwn}
+          onImagePress={handleImageUpload}
+          onLogoutPress={() => setLogoutDialogVisible(true)}
+        />
 
-        <CategoryList
-          categories={categories}
-          onEdit={() => setCategoryModalVisible(true)}
-          isOwn={isOwn}
-        />
-        <SkillList
-          skills={skills}
-          onEdit={() => setSkillModalVisible(true)}
-          isOwn={isOwn}
-        />
-        <ExperienceList
-          experiences={experiences}
-          onEdit={() => setExperienceModalVisible(true)}
-          isOwn={isOwn}
-        />
-        <EducationList
-          educations={educations}
-          onEdit={() => setEducationModalVisible(true)}
-          isOwn={isOwn}
-        />
-        <CertificateList
-          certificates={certificates}
-          onEdit={() => setCertificateModalVisible(true)}
-          isOwn={isOwn}
-        />
+        <View style={styles.content}>
+          <Animated.View
+            entering={FadeInDown.delay(100)}
+            style={styles.sectionContainer}
+          >
+            <CategoryList
+              categories={categories}
+              onEdit={() => setCategoryModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(200)}
+            style={styles.sectionContainer}
+          >
+            <SkillList
+              skills={skills}
+              onEdit={() => setSkillModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(300)}
+            style={styles.sectionContainer}
+          >
+            <ExperienceList
+              experiences={experiences}
+              onEdit={() => setExperienceModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(400)}
+            style={styles.sectionContainer}
+          >
+            <EducationList
+              educations={educations}
+              onEdit={() => setEducationModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(500)}
+            style={[styles.sectionContainer, styles.lastSection]}
+          >
+            <CertificateList
+              certificates={certificates}
+              onEdit={() => setCertificateModalVisible(true)}
+              isOwn={isOwn}
+            />
+          </Animated.View>
+        </View>
       </ScrollView>
 
       {isOwn && (
@@ -252,51 +298,3 @@ const MentorProfileScreen = () => {
 };
 
 export default MentorProfileScreen;
-
-const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: "#121212",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-  },
-  profileCard: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 20,
-    marginBottom: 15,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatarFallback: {
-    backgroundColor: "#333",
-  },
-  nameSection: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  nameText: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  roleText: {
-    color: "#A0A0A0",
-    fontSize: 14,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 5,
-  },
-  avatarImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-});

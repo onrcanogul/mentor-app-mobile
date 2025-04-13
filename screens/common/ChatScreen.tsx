@@ -19,6 +19,7 @@ import messageService from "../../services/message-service";
 import chatService from "../../services/chat-service";
 import userService from "../../services/user-service";
 import toastrService from "../../services/toastr-service";
+import { useTheme } from "../../contexts/ThemeContext";
 
 import { Message } from "../../domain/message";
 import { Chat, ChatStatus } from "../../domain/chat";
@@ -39,6 +40,7 @@ interface ChatScreenProps {
 const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const { chatId, user } = route.params;
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   const [chat, setChat] = useState<Chat>();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -133,87 +135,156 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   };
 
   return (
-    <>
-      <SafeAreaView style={styles.safeContainer}>
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+    >
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.colors.background.primary },
+        ]}
+      >
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: theme.colors.card.border },
+          ]}
         >
-          {/* 👤 HEADER */}
-          <View style={styles.header}>
-            <Image
-              source={{
-                uri: `https://ui-avatars.com/api/?name=OnurcanOgul`,
-              }}
-              style={styles.avatar}
-            />
-            <Text style={styles.username}>{"Onurcan Oğul"}</Text>
-
-            {/* ➕ Görüşmeyi Sonlandır Butonu */}
-            {messages.length >= 10 && !chatEnded && (
-              <TouchableOpacity
-                style={styles.endChatButton}
-                onPress={handleEndChat}
-              >
-                <Text style={styles.endChatText}>{t("endChat")}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* 💬 MESSAGES */}
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id!}
-            renderItem={renderMessage}
-            onContentSizeChange={() =>
-              flatListRef.current?.scrollToEnd({ animated: true })
-            }
-            onLayout={() =>
-              flatListRef.current?.scrollToEnd({ animated: true })
-            }
+          <Image
+            source={{
+              uri: `https://ui-avatars.com/api/?name=OnurcanOgul`,
+            }}
+            style={styles.avatar}
           />
-
-          {/* 🚫 GÖRÜŞME BİTTİ UYARISI */}
-          {chatEnded && (
-            <Text style={styles.chatEndedText}>{t("chatHasEnded")}</Text>
-          )}
-
-          {/* ✍️ MESAJ GİRİŞ ALANI */}
+          <Text style={[styles.username, { color: theme.colors.text.primary }]}>
+            {"Onurcan Oğul"}
+          </Text>
           {!chatEnded && (
-            <View style={styles.inputContainer}>
-              <TextInput
-                value={inputText}
-                onChangeText={setInputText}
-                style={styles.input}
-                placeholder={t("writeMessage")}
-                placeholderTextColor="#A0A0A0"
-              />
-              <TouchableOpacity
-                onPress={handleSendMessage}
-                style={styles.sendButton}
+            <TouchableOpacity
+              style={[
+                styles.endChatButton,
+                { backgroundColor: theme.colors.button.primary },
+              ]}
+              onPress={handleEndChat}
+            >
+              <Text
+                style={[
+                  styles.endChatText,
+                  { color: theme.colors.button.text },
+                ]}
               >
-                <Text style={styles.sendText}>➤</Text>
-              </TouchableOpacity>
+                {t("endChat")}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id!.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.messageWrapper}>
+              <View
+                style={[
+                  styles.messageContainer,
+                  item.senderId === currentUserId
+                    ? [
+                        styles.myMessage,
+                        { backgroundColor: theme.colors.button.primary },
+                      ]
+                    : [
+                        styles.otherMessage,
+                        { backgroundColor: theme.colors.card.background },
+                      ],
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.messageText,
+                    { color: theme.colors.text.primary },
+                  ]}
+                >
+                  {item.content}
+                </Text>
+                <Text
+                  style={[
+                    styles.messageTime,
+                    { color: theme.colors.text.secondary },
+                  ]}
+                >
+                  {formatDate(item.createdDate)}
+                </Text>
+              </View>
             </View>
           )}
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </>
+          ref={flatListRef}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+          onLayout={() => flatListRef.current?.scrollToEnd()}
+        />
+
+        {chatEnded ? (
+          <Text
+            style={[
+              styles.chatEndedText,
+              { color: theme.colors.text.secondary },
+            ]}
+          >
+            {t("chatHasEnded")}
+          </Text>
+        ) : (
+          <View
+            style={[
+              styles.inputContainer,
+              { borderColor: theme.colors.card.border },
+            ]}
+          >
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.colors.input.background,
+                  color: theme.colors.input.text,
+                  borderColor: theme.colors.input.border,
+                },
+              ]}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder={t("writeMessage")}
+              placeholderTextColor={theme.colors.input.placeholder}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                { backgroundColor: theme.colors.button.primary },
+              ]}
+              onPress={handleSendMessage}
+            >
+              <Text
+                style={[styles.sendText, { color: theme.colors.button.text }]}
+              >
+                ➤
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default ChatScreen;
 
 const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: "#121212" },
+  safeContainer: { flex: 1 },
   container: { flex: 1, padding: 10 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#1E1E1E",
     marginBottom: 10,
   },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
@@ -222,7 +293,6 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     paddingVertical: 6,
     paddingHorizontal: 12,
-    backgroundColor: "#C62828",
     borderRadius: 8,
   },
   endChatText: {
@@ -257,18 +327,15 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: "center",
     borderTopWidth: 1,
-    borderColor: "#1E1E1E",
   },
   input: {
     flex: 1,
-    backgroundColor: "#1E1E1E",
-    color: "#FFFFFF",
     padding: 10,
     borderRadius: 20,
+    borderWidth: 1,
   },
   sendButton: {
     marginLeft: 10,
-    backgroundColor: "#075E54",
     padding: 10,
     borderRadius: 20,
   },

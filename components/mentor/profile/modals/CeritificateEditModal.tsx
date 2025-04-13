@@ -1,324 +1,254 @@
 import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  BackHandler,
-  Platform,
-} from "react-native";
+import { View, TextInput, StyleSheet } from "react-native";
+import { Text, IconButton } from "react-native-paper";
 import { Certificate } from "../../../../domain/certificate";
-import mentorService from "../../../../services/mentor-service";
 import toastrService from "../../../../services/toastr-service";
-import changeNavigationBarColor from "react-native-navigation-bar-color";
+import mentorService from "../../../../services/mentor-service";
 import userService from "../../../../services/user-service";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import BaseEditModal from "../../../common/BaseEditModal";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-interface Props {
+interface CertificateEditModalProps {
   visible: boolean;
   certificates: Certificate[];
   onClose: () => void;
   onSave: (updated: Certificate[]) => void;
 }
 
-const CertificateEditModal: React.FC<Props> = ({
+const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   visible,
   certificates,
   onClose,
   onSave,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [editedCertificates, setEditedCertificates] = useState<Certificate[]>(
     []
   );
-  const [newName, setNewName] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newIcon, setNewIcon] = useState("");
-  const [newFrom, setNewFrom] = useState("");
+  const [newCertificate, setNewCertificate] = useState<Partial<Certificate>>({
+    name: "",
+    description: "",
+    from: "",
+    skills: [],
+  });
 
-  // İlk yükleme - gelen props'u state'e aktar
   useEffect(() => {
     setEditedCertificates(certificates);
   }, [certificates]);
 
-  // Android geri tuşu kapatıldığında modalı kapat
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (visible) {
-          onClose();
-          return true;
-        }
-        return false;
+  const handleSave = async () => {
+    try {
+      const userId = (await userService.getCurrentUser()).id;
+      const result = await mentorService.saveCertificates(
+        userId,
+        editedCertificates
+      );
+
+      if (result) {
+        toastrService.success(t("certificateSaveSuccess"));
+        onSave(editedCertificates);
+        onClose();
+      } else {
+        toastrService.error(t("certificateSaveError"));
       }
-    );
-    return () => backHandler.remove();
-  }, [visible]);
-
-  // Navigation bar rengini ayarla (opsiyonel)
-  useEffect(() => {
-    if (visible && Platform.OS === "android") {
-      // changeNavigationBarColor("#121212", false); // açmak istersen
+    } catch (error) {
+      toastrService.error(t("certificateSaveError"));
     }
-  }, [visible]);
-
-  const updateCertificate = (
-    index: number,
-    field: keyof Certificate,
-    value: string
-  ) => {
-    const updated = [...editedCertificates];
-    (updated[index] as any)[field] = value;
-    setEditedCertificates(updated);
   };
 
-  const deleteCertificate = (index: number) => {
+  const handleAddCertificate = () => {
+    if (newCertificate.name) {
+      const certificate: Certificate = {
+        id: Date.now().toString(),
+        name: newCertificate.name,
+        description: newCertificate.description,
+        from: newCertificate.from,
+        skills: [],
+        createdBy: "USER",
+      };
+
+      setEditedCertificates([...editedCertificates, certificate]);
+      setNewCertificate({
+        name: "",
+        description: "",
+        from: "",
+        skills: [],
+      });
+    }
+  };
+
+  const handleDeleteCertificate = (index: number) => {
     const updated = [...editedCertificates];
     updated.splice(index, 1);
     setEditedCertificates(updated);
   };
 
-  const addCertificate = () => {
-    if (!newName.trim()) return;
-
-    const newCert: Certificate = {
-      name: newName,
-      description: newDescription,
-      icon: newIcon,
-      from: newFrom,
-      skills: [],
-      createdBy: "SYSTEM",
-    };
-    setEditedCertificates((prev) => [...prev, newCert]);
-
-    setNewName("");
-    setNewDescription("");
-    setNewIcon("");
-    setNewFrom("");
-  };
-
-  const saveChanges = async () => {
-    const result = await mentorService.saveCertificates(
-      (
-        await userService.getCurrentUser()
-      ).id,
-      editedCertificates
-    );
-
-    if (result) {
-      toastrService.success(t("certificateSaveSuccess"));
-      onSave(editedCertificates);
-      onClose();
-    } else {
-      toastrService.error(t("certificateSaveError"));
-    }
-  };
-
   return (
-    <Modal
+    <BaseEditModal
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
+      onClose={onClose}
+      title={t("editCertificate")}
+      onSave={handleSave}
+      saveDisabled={editedCertificates.length === 0}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>{t("editCertificatesTitle")}</Text>
+      <View style={styles.container}>
+        <View style={styles.addSection}>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: theme.colors.input.background },
+            ]}
+            placeholder={t("certificateName")}
+            placeholderTextColor={theme.colors.input.placeholder}
+            value={newCertificate.name}
+            onChangeText={(text) =>
+              setNewCertificate({ ...newCertificate, name: text })
+            }
+          />
+          <TextInput
+            style={[
+              styles.input,
+              styles.descriptionInput,
+              { backgroundColor: theme.colors.input.background },
+            ]}
+            placeholder={t("description")}
+            placeholderTextColor={theme.colors.input.placeholder}
+            value={newCertificate.description}
+            onChangeText={(text) =>
+              setNewCertificate({ ...newCertificate, description: text })
+            }
+            multiline
+          />
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: theme.colors.input.background },
+            ]}
+            placeholder={t("from")}
+            placeholderTextColor={theme.colors.input.placeholder}
+            value={newCertificate.from}
+            onChangeText={(text) =>
+              setNewCertificate({ ...newCertificate, from: text })
+            }
+          />
 
-          {/* Yeni Sertifika */}
-          <View style={styles.addSection}>
-            <Text style={styles.sectionTitle}>{t("addNewCertificate")}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t("certificateName")}
-              placeholderTextColor="#888"
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={t("description")}
-              placeholderTextColor="#888"
-              value={newDescription}
-              onChangeText={setNewDescription}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={t("iconUrl")}
-              placeholderTextColor="#888"
-              value={newIcon}
-              onChangeText={setNewIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={t("organization")}
-              placeholderTextColor="#888"
-              value={newFrom}
-              onChangeText={setNewFrom}
-            />
-            <TouchableOpacity onPress={addCertificate} style={styles.addButton}>
-              <Text style={styles.addButtonText}>+ {t("add")}</Text>
-            </TouchableOpacity>
-          </View>
+          <IconButton
+            icon="plus-circle"
+            size={50}
+            iconColor={theme.colors.primary.main}
+            onPress={handleAddCertificate}
+            disabled={!newCertificate.name}
+            style={[styles.addButton, !newCertificate.name && { opacity: 0.5 }]}
+          />
+        </View>
 
-          {/* Mevcut Sertifikalar */}
-          <ScrollView style={{ maxHeight: 300 }}>
-            {editedCertificates.map((cert, index) => (
-              <View key={cert.id || index} style={styles.certItem}>
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("certificateName")}
-                  placeholderTextColor="#888"
-                  value={cert.name}
-                  onChangeText={(text) =>
-                    updateCertificate(index, "name", text)
-                  }
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("description")}
-                  placeholderTextColor="#888"
-                  value={cert.description ?? ""}
-                  onChangeText={(text) =>
-                    updateCertificate(index, "description", text)
-                  }
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("iconUrl")}
-                  placeholderTextColor="#888"
-                  value={cert.icon ?? ""}
-                  onChangeText={(text) =>
-                    updateCertificate(index, "icon", text)
-                  }
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("organization")}
-                  placeholderTextColor="#888"
-                  value={cert.from}
-                  onChangeText={(text) =>
-                    updateCertificate(index, "from", text)
-                  }
-                />
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => deleteCertificate(index)}
+        <View style={styles.certificatesList}>
+          {editedCertificates.map((certificate, index) => (
+            <Animated.View
+              key={certificate.id}
+              entering={FadeInDown.delay(index * 50)}
+              style={[
+                styles.certificateItem,
+                { backgroundColor: theme.colors.card.background },
+              ]}
+            >
+              <View style={styles.certificateHeader}>
+                <Text
+                  style={[
+                    styles.certificateName,
+                    { color: theme.colors.text.primary },
+                  ]}
                 >
-                  <Text style={styles.deleteButtonText}>{t("delete")}</Text>
-                </TouchableOpacity>
+                  {certificate.name}
+                </Text>
+                <IconButton
+                  icon="delete"
+                  size={20}
+                  iconColor={theme.colors.text.secondary}
+                  onPress={() => handleDeleteCertificate(index)}
+                />
               </View>
-            ))}
-          </ScrollView>
 
-          {/* Butonlar */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-              <Text style={styles.buttonText}>{t("cancel")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={saveChanges} style={styles.saveButton}>
-              <Text style={styles.buttonText}>{t("save")}</Text>
-            </TouchableOpacity>
-          </View>
+              {certificate.description && (
+                <Text
+                  style={[
+                    styles.certificateDescription,
+                    { color: theme.colors.text.secondary },
+                  ]}
+                >
+                  {certificate.description}
+                </Text>
+              )}
+
+              <Text
+                style={[
+                  styles.certificateFrom,
+                  { color: theme.colors.text.secondary },
+                ]}
+              >
+                {certificate.from}
+              </Text>
+            </Animated.View>
+          ))}
         </View>
       </View>
-    </Modal>
+    </BaseEditModal>
   );
 };
 
-export default CertificateEditModal;
-
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "90%",
-    backgroundColor: "#1E1E1E",
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFD700",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFF",
-    marginBottom: 10,
   },
   addSection: {
-    marginBottom: 20,
-  },
-  certItem: {
-    marginBottom: 20,
-    backgroundColor: "#292929",
-    padding: 10,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   input: {
-    backgroundColor: "#3A3A3A",
-    color: "#FFF",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
-  deleteButton: {
-    backgroundColor: "#AA3333",
-    padding: 8,
-    borderRadius: 5,
-    marginTop: 10,
-    alignSelf: "flex-end",
-  },
-  deleteButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
+  descriptionInput: {
+    height: 100,
+    textAlignVertical: "top",
+    paddingTop: 12,
   },
   addButton: {
-    backgroundColor: "#444",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 5,
+    alignSelf: "center",
+    marginTop: 8,
   },
-  addButtonText: {
-    color: "#FFF",
-    textAlign: "center",
-    fontWeight: "bold",
+  certificatesList: {
+    gap: 12,
   },
-  buttonRow: {
+  certificateItem: {
+    padding: 16,
+    borderRadius: 12,
+  },
+  certificateHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 15,
+    alignItems: "center",
   },
-  cancelButton: {
-    backgroundColor: "#888",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 5,
+  certificateName: {
+    fontSize: 16,
+    fontWeight: "600",
   },
-  saveButton: {
-    backgroundColor: "#FFD700",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginLeft: 5,
+  certificateDescription: {
+    fontSize: 14,
+    marginTop: 4,
   },
-  buttonText: {
-    textAlign: "center",
-    fontWeight: "bold",
-    color: "#000",
+  certificateFrom: {
+    fontSize: 14,
+    marginTop: 4,
+    fontStyle: "italic",
   },
 });
+
+export default CertificateEditModal;

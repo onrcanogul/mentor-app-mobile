@@ -1,80 +1,150 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Card, IconButton, Chip } from "react-native-paper";
+import { View, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import { Text, IconButton } from "react-native-paper";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { BlurView, BlurTint } from "expo-blur";
 import { Category } from "../../../domain/category";
-import { useTranslation } from "react-i18next";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { defaultTheme } from "../../../theme/defaultTheme";
 
-interface Props {
+interface CategoryListProps {
   categories: Category[];
-  onEdit: () => void;
   isOwn: boolean;
+  onEdit?: () => void;
 }
 
-const CategorySelection: React.FC<Props> = ({ categories, onEdit, isOwn }) => {
-  const { t } = useTranslation();
+const CategoryList: React.FC<CategoryListProps> = ({
+  categories,
+  isOwn,
+  onEdit,
+}) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === defaultTheme;
+
+  const CardBackground = Platform.OS === "ios" ? BlurView : View;
+  const cardProps =
+    Platform.OS === "ios"
+      ? {
+          intensity: isDarkMode ? 20 : 40,
+          tint: isDarkMode ? "dark" : ("light" as BlurTint),
+        }
+      : {
+          style: {
+            backgroundColor: isDarkMode
+              ? "rgba(255, 255, 255, 0.05)"
+              : "rgba(0, 0, 0, 0.05)",
+          },
+        };
 
   return (
-    <Card style={styles.card}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🗂️ {t("categories")}</Text>
-        {isOwn === true ? (
-          <IconButton icon="pencil" iconColor="#FFD700" onPress={onEdit} />
-        ) : (
-          <></>
+        <View style={styles.titleContainer}>
+          <IconButton
+            icon="folder"
+            size={24}
+            iconColor={theme.colors.primary.main}
+          />
+          <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+            Categories
+          </Text>
+        </View>
+        {isOwn && (
+          <IconButton
+            icon="pencil"
+            size={20}
+            iconColor={theme.colors.text.secondary}
+            onPress={onEdit}
+          />
         )}
       </View>
-      <View style={styles.chipContainer}>
-        {categories.length > 0 ? (
-          categories.map((category, index) => (
-            <Chip key={index} style={styles.chip} textStyle={styles.chipText}>
-              {t(category.localizationCode)}
-            </Chip>
-          ))
+
+      <View style={styles.categoriesContainer}>
+        {categories.length === 0 ? (
+          <Text
+            style={[styles.emptyText, { color: theme.colors.text.secondary }]}
+          >
+            No categories added yet.
+          </Text>
         ) : (
-          <Text style={styles.emptyText}>{t("categoryNotAdded")}</Text>
+          <View style={styles.categoryGrid}>
+            {categories.map((category, index) => (
+              <Animated.View
+                key={category.id}
+                entering={FadeInDown.delay(index * 100)}
+                style={styles.categoryItemContainer}
+              >
+                <CardBackground
+                  {...cardProps}
+                  style={[
+                    styles.categoryItem,
+                    Platform.OS === "ios" ? {} : cardProps.style,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      { color: theme.colors.text.primary },
+                    ]}
+                  >
+                    {category.name}
+                  </Text>
+                </CardBackground>
+              </Animated.View>
+            ))}
+          </View>
         )}
       </View>
-    </Card>
+    </View>
   );
 };
 
-export default CategorySelection;
-
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 15,
-    marginHorizontal: 15,
-    marginBottom: 10,
+  container: {
+    marginHorizontal: 16,
+    marginBottom: 24,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   title: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: "600",
   },
-  chipContainer: {
+  categoriesContainer: {
+    minHeight: 50,
+  },
+  categoryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    marginHorizontal: -4,
   },
-  chip: {
-    backgroundColor: "#3A3A3A",
-    margin: 4,
+  categoryItemContainer: {
+    padding: 4,
+    width: "50%",
   },
-  chipText: {
-    color: "#FFF",
+  categoryItem: {
+    borderRadius: 12,
+    padding: 12,
+    overflow: "hidden",
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
   },
   emptyText: {
-    color: "#999",
-    fontSize: 14,
+    textAlign: "center",
     fontStyle: "italic",
-    marginLeft: 4,
+    marginTop: 8,
   },
 });
+
+export default CategoryList;
