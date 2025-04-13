@@ -41,6 +41,7 @@ const MentorMatchScreen = () => {
       () => {},
       () => {}
     );
+    console.log(result);
     setMatches(result);
     setLoading(false);
   }

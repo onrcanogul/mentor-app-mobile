@@ -1,33 +1,35 @@
 import React, { useEffect, useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card, Text, Avatar, IconButton } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import userService from "../../services/user-service";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as ImagePicker from "expo-image-picker";
 import { Category } from "../../domain/category";
 import CategoryList from "../../components/mentor/profile/CategoryList";
-import CategoryEditModal from "../../components/mentor/profile/modals/CategoryEditModal";
+import CategoryEditModal from "../../components/mentee/profile/modals/CategoryEditModal";
 import LoadingSpinner from "../../utils/spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import toastrService from "../../services/toastr-service";
+import userService from "../../services/user-service";
+import categoryService from "../../services/category-service";
 import ProfileCard from "../../components/common/ProfileCard";
+import { useTheme } from "../../contexts/ThemeContext";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { RootStackParamList } from "../../navigation/types";
 
 const GeneralProfileScreen = () => {
-  const navigator = useNavigation();
+  const navigator =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const { setRole, setAuthenticated } = useAuth();
+  const { theme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setLoading] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -46,26 +48,87 @@ const GeneralProfileScreen = () => {
     toastrService.success(t("logoutSuccess"));
     setAuthenticated(false);
     setRole(null);
-    setTimeout(() => {
-      navigator.navigate("Home");
-    }, 1000);
+    navigator.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
+  };
+
+  const handleImageUpload = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert(t("galleryPermissionRequired"));
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const file = {
+        uri: result.assets[0].uri,
+        name: result.assets[0].fileName,
+        type: result.assets[0].mimeType,
+      };
+
+      await userService.uploadProfilePhoto(file, user.id);
+      await fetchUser();
+    }
+  };
+
+  const handleSaveCategories = async (updatedCategories: Category[]) => {
+    try {
+      const response = await categoryService.get(
+        () => {},
+        () => {}
+      );
+      const selectedCategories = response.filter((cat) =>
+        updatedCategories.some((updated) => updated.id === cat.id)
+      );
+
+      setCategories(selectedCategories);
+      await userService.updateCategories(user.id, selectedCategories);
+      toastrService.success(t("categorySaveSuccess"));
+      await fetchUser();
+    } catch (error) {
+      toastrService.error(t("categorySaveError"));
+    }
   };
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.safeContainer}>
+      <SafeAreaView
+        style={[
+          styles.safeContainer,
+          { backgroundColor: theme.colors.background.primary },
+        ]}
+      >
         <LoadingSpinner visible={true} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+    >
       <ScrollView
         style={styles.container}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={fetchUser} />
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={fetchUser}
+            tintColor={theme.colors.primary.main}
+          />
         }
+        showsVerticalScrollIndicator={false}
       >
         <ProfileCard
           username={user.username}
@@ -73,72 +136,58 @@ const GeneralProfileScreen = () => {
           imageUrl={user.imageUrl}
           role="General"
           isOwn={true}
-          onLogoutPress={handleLogout}
+          onImagePress={handleImageUpload}
+          onLogoutPress={() => setLogoutDialogVisible(true)}
         />
 
-        <CategoryList
-          categories={categories}
-          isOwn={true}
-          onEdit={() => setCategoryModalVisible(true)}
-        />
+        <View style={styles.content}>
+          <Animated.View
+            entering={FadeInDown.delay(100)}
+            style={styles.sectionContainer}
+          >
+            <CategoryList
+              categories={categories}
+              isOwn={true}
+              onEdit={() => setCategoryModalVisible(true)}
+            />
+          </Animated.View>
+        </View>
       </ScrollView>
 
       <CategoryEditModal
         visible={categoryModalVisible}
         categories={categories}
         onClose={() => setCategoryModalVisible(false)}
-        onSave={(updated) => setCategories(updated)}
+        onSave={handleSaveCategories}
+      />
+
+      <ConfirmationModal
+        visible={logoutDialogVisible}
+        onClose={() => setLogoutDialogVisible(false)}
+        onConfirm={handleLogout}
+        message={t("sureLogout")}
+        confirmText={t("logout")}
+        cancelText={t("cancel")}
       />
     </SafeAreaView>
   );
 };
 
-export default GeneralProfileScreen;
-
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#121212",
   },
   container: {
     flex: 1,
-    backgroundColor: "#121212",
   },
-  profileCard: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 20,
-    marginBottom: 15,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  nameSection: {
-    marginLeft: 15,
+  content: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  nameText: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  roleText: {
-    color: "#A0A0A0",
-    fontSize: 14,
-  },
-  avatarImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-  avatarFallback: {
-    backgroundColor: "#333",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
+  sectionContainer: {
+    marginBottom: 24,
+    paddingVertical: 16,
   },
 });
+
+export default GeneralProfileScreen;

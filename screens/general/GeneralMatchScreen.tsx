@@ -1,20 +1,31 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import {
+  RefreshControl,
+  StyleSheet,
+  TextInput,
+  View,
+  Dimensions,
+} from "react-native";
 import MatchSection from "../../components/general/match/MatchSection";
 import { Match, MatchStatus } from "../../domain/match";
 import { useTranslation } from "react-i18next";
 import matchService from "../../services/match-service";
 import { useFocusEffect } from "@react-navigation/native";
 import userService from "../../services/user-service";
-import SearchBar from "../../components/mentor/match/SearchBar";
 import { FAB } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import toastrService from "../../services/toastr-service";
+import { useTheme } from "../../contexts/ThemeContext";
+import Animated, { FadeIn, FadeInDown, Layout } from "react-native-reanimated";
+
+const { width } = Dimensions.get("window");
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const GeneralMatchScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [isLoading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showActiveMatches, setShowActiveMatches] = useState(true);
@@ -67,59 +78,106 @@ const GeneralMatchScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <SearchBar query={searchQuery} setQuery={setSearchQuery} />
-      <ScrollView
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+      edges={["top"]}
+    >
+      <Animated.View
+        entering={FadeInDown.duration(600).springify()}
+        style={styles.searchContainer}
+      >
+        <AnimatedTextInput
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: theme.colors.background.secondary,
+              color: theme.colors.text.primary,
+            },
+          ]}
+          placeholder={t("searchMentee")}
+          placeholderTextColor={theme.colors.text.disabled}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </Animated.View>
+
+      <Animated.ScrollView
+        entering={FadeIn.duration(600).delay(200)}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={fetchMatches}
-            tintColor="#FFD700"
+            tintColor={theme.colors.primary.main}
           />
         }
+        style={styles.scrollView}
       >
-        <MatchSection
-          title={t("activeMatches")}
-          matches={
-            searchQuery
-              ? filteredMatches.filter((m) => m.status === MatchStatus.Accepted)
-              : matches.filter((m) => m.status === MatchStatus.Accepted)
-          }
-          isVisible={showActiveMatches}
-          onToggle={() => setShowActiveMatches(!showActiveMatches)}
-          setLoading={setLoading}
-          isLoading={isLoading}
-        />
-        <MatchSection
-          title={t("waitingMatches")}
-          matches={
-            searchQuery
-              ? filteredMatches.filter((m) => m.status === MatchStatus.Pending)
-              : matches.filter((m) => m.status === MatchStatus.Pending)
-          }
-          isVisible={showWaitingMatches}
-          onToggle={() => setShowWaitingMatches(!showWaitingMatches)}
-          setLoading={setLoading}
-          isLoading={isLoading}
-        />
-        <MatchSection
-          title={t("pastMatches")}
-          matches={
-            searchQuery
-              ? filteredMatches.filter((m) => m.status === MatchStatus.Rejected)
-              : matches.filter((m) => m.status === MatchStatus.Rejected)
-          }
-          isVisible={showPastMatches}
-          onToggle={() => setShowPastMatches(!showPastMatches)}
-          setLoading={setLoading}
-          isLoading={isLoading}
-        />
-      </ScrollView>
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(400).springify()}
+        >
+          <MatchSection
+            title={t("activeMatches")}
+            matches={
+              searchQuery
+                ? filteredMatches.filter(
+                    (m) => m.status === MatchStatus.Accepted
+                  )
+                : matches.filter((m) => m.status === MatchStatus.Accepted)
+            }
+            isVisible={showActiveMatches}
+            onToggle={() => setShowActiveMatches(!showActiveMatches)}
+            setLoading={setLoading}
+            isLoading={isLoading}
+          />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(600).springify()}
+        >
+          <MatchSection
+            title={t("waitingMatches")}
+            matches={
+              searchQuery
+                ? filteredMatches.filter(
+                    (m) => m.status === MatchStatus.Pending
+                  )
+                : matches.filter((m) => m.status === MatchStatus.Pending)
+            }
+            isVisible={showWaitingMatches}
+            onToggle={() => setShowWaitingMatches(!showWaitingMatches)}
+            setLoading={setLoading}
+            isLoading={isLoading}
+          />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(800).springify()}
+        >
+          <MatchSection
+            title={t("pastMatches")}
+            matches={
+              searchQuery
+                ? filteredMatches.filter(
+                    (m) => m.status === MatchStatus.Rejected
+                  )
+                : matches.filter((m) => m.status === MatchStatus.Rejected)
+            }
+            isVisible={showPastMatches}
+            onToggle={() => setShowPastMatches(!showPastMatches)}
+            setLoading={setLoading}
+            isLoading={isLoading}
+          />
+        </Animated.View>
+      </Animated.ScrollView>
+
       <FAB
         icon="plus"
-        style={styles.fab}
-        color="#121212"
-        onPress={() => handlePress()}
+        style={[styles.fab, { backgroundColor: theme.colors.primary.main }]}
+        color={theme.colors.primary.contrastText}
+        onPress={handlePress}
       />
     </SafeAreaView>
   );
@@ -128,16 +186,36 @@ const GeneralMatchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
     padding: 20,
+  },
+  searchContainer: {
+    marginBottom: 20,
+  },
+  searchInput: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  scrollView: {
+    flex: 1,
   },
   fab: {
     position: "absolute",
     margin: 16,
-    borderRadius: 100,
     right: 0,
-    bottom: 0,
-    backgroundColor: "#FFD700",
+    bottom: 80,
+    borderRadius: 28,
+    elevation: 5,
+    zIndex: 999,
   },
 });
 

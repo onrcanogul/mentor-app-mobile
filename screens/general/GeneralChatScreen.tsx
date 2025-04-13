@@ -1,285 +1,282 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
   StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-
-import { useChatSocket } from "../../hooks/useChatSocket";
-import messageService from "../../services/message-service";
+import { Chat } from "../../domain/chat";
+import { Message } from "../../domain/message";
 import chatService from "../../services/chat-service";
 import userService from "../../services/user-service";
-import toastrService from "../../services/toastr-service";
-
-import { Message } from "../../domain/message";
-import { Chat, ChatStatus } from "../../domain/chat";
 import { formatDate } from "../../utils/dateFormatter";
-import LoadingSpinner from "../../utils/spinner";
+import Animated, { FadeIn, SlideInRight } from "react-native-reanimated";
+import { useTheme } from "../../contexts/ThemeContext";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-interface ChatScreenProps {
-  route: {
-    params: {
-      chatId: string;
-    };
-  };
-}
+type RouteParams = {
+  chatId: string;
+};
 
-const GeneralChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
-  const { chatId } = route.params;
+const GeneralChatScreen = () => {
+  const route = useRoute();
+  const { chatId } = route.params as RouteParams;
   const { t } = useTranslation();
-
+  const navigation = useNavigation();
+  const { theme } = useTheme();
   const [chat, setChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [currentUserId, setCurrentUserId] = useState("");
-  const [chatEnded, setChatEnded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const flatListRef = useRef<FlatList<Message>>(null);
+  const [message, setMessage] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    const fetchChat = async () => {
-      try {
-        const response = await chatService.getById(
-          chatId,
-          () => {},
-          () => {}
-        );
-        if (response) {
-          setChat(response);
-          setMessages(response.messages);
-          setChatEnded(response.status === ChatStatus.Closed);
+    getCurrentUser();
+  }, []);
 
-          const currentUser = await userService.getCurrentUser();
-          setCurrentUserId(currentUser.id);
-        }
-      } catch (error) {
-        console.error("Chat verisi çekilemedi", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  useEffect(() => {
+    if (currentUserId) {
+      fetchChat();
+    }
+  }, [currentUserId]);
 
-    fetchChat();
-  }, [chatId]);
+  async function getCurrentUser() {
+    const user = await userService.getCurrentUser();
+    setCurrentUserId(user.id);
+  }
 
-  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
+  async function fetchChat() {
+    if (!currentUserId) return;
+    const chatResult = await chatService.getById(chatId);
+    if (chatResult) {
+      setChat(chatResult);
+      navigation.setOptions({
+        title: chatResult.match
+          ? chatResult.match.sender.username
+          : t("conversation"),
+      });
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!message.trim() || !currentUserId || !chat) return;
+
     const newMessage: Message = {
       id: Date.now().toString(),
-      chatId,
-      senderId,
-      content: message,
-      createdDate: new Date(),
-      isRead: false,
-      createdBy: "SYSTEM",
-      isDeleted: false,
-    };
-    setMessages((prev) => [...prev, newMessage]);
-  });
-
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || !currentUserId || chatEnded) return;
-
-    const newMsg: Message = {
-      chatId,
+      chatId: chat.id,
+      content: message.trim(),
       senderId: currentUserId,
-      content: inputText,
       createdDate: new Date(),
       isRead: false,
-      createdBy: "SYSTEM",
-      isDeleted: false,
     };
 
-    setInputText("");
-    await sendMessage(currentUserId, inputText);
-    await messageService.create(
-      newMsg,
-      () => {},
-      () => {}
-    );
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-  };
+    const updatedChat = {
+      ...chat,
+      messages: [...(chat.messages || []), newMessage],
+    };
 
-  const handleEndChat = async () => {
-    const result = await chatService.close(chatId);
-    if (result === true) {
-      toastrService.success(t("endChatSuccess"));
-      setChatEnded(true);
-    } else {
-      toastrService.error(t("endChatError"));
+    setChat(updatedChat);
+    setMessage("");
+
+    try {
+      await chatService.create(chat.id, newMessage);
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
-    const isMe = item.senderId === currentUserId;
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
+    if (!currentUserId) return null;
+
+    const isCurrentUser = item.senderId === currentUserId;
+    const showDateSeparator =
+      index === 0 ||
+      new Date(item.createdDate).toDateString() !==
+        new Date(chat?.messages?.[index - 1]?.createdDate || "").toDateString();
+
     return (
-      <View style={styles.messageWrapper}>
+      <Animated.View entering={SlideInRight.delay(index * 50).springify()}>
+        {showDateSeparator && (
+          <View style={styles.dateSeparator}>
+            <Text
+              style={[styles.dateText, { color: theme.colors.text.secondary }]}
+            >
+              {formatDate(new Date(item.createdDate))}
+            </Text>
+          </View>
+        )}
         <View
           style={[
             styles.messageContainer,
-            isMe ? styles.myMessage : styles.otherMessage,
+            isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
+            {
+              backgroundColor: isCurrentUser
+                ? theme.colors.primary.main
+                : theme.colors.background.secondary,
+            },
           ]}
         >
-          <Text style={styles.messageText}>{item.content}</Text>
-          <Text style={styles.messageTime}>{formatDate(item.createdDate)}</Text>
+          <Text
+            style={[
+              styles.messageText,
+              {
+                color: isCurrentUser
+                  ? theme.colors.text.primary
+                  : theme.colors.text.primary,
+              },
+            ]}
+          >
+            {item.content}
+          </Text>
+          <Text
+            style={[
+              styles.timeText,
+              {
+                color: isCurrentUser
+                  ? theme.colors.text.primary
+                  : theme.colors.text.secondary,
+              },
+            ]}
+          >
+            {formatDate(new Date(item.createdDate))}
+          </Text>
         </View>
-      </View>
+      </Animated.View>
     );
   };
 
-  if (isLoading || !chat) {
-    return <LoadingSpinner visible={true} />;
-  }
-
-  const userInfo = chat.match.sender;
-
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background.primary },
+      ]}
+      edges={["bottom"]}
+    >
       <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <View style={styles.header}>
-          <Image
-            source={{ uri: userInfo.imageUrl || "https://placehold.co/40x40" }}
-            style={styles.avatar}
-          />
-          <Text style={styles.username}>
-            {userInfo.username ?? "Kullanıcı"}
-          </Text>
-
-          {messages.length >= 10 && !chatEnded && (
-            <TouchableOpacity
-              style={styles.endChatButton}
-              onPress={handleEndChat}
-            >
-              <Text style={styles.endChatText}>{t("endChat")}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
         <FlatList
           ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id!}
+          data={chat?.messages || []}
           renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messageList}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: true })
           }
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
-        {chatEnded && (
-          <Text style={styles.chatEndedText}>{t("chatHasEnded")}</Text>
-        )}
-
-        {!chatEnded && (
-          <View style={styles.inputContainer}>
-            <TouchableOpacity style={styles.mediaButton}>
-              <Ionicons name="mic" size={20} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mediaButton}>
-              <Ionicons name="videocam" size={20} color="#FFF" />
-            </TouchableOpacity>
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              style={styles.input}
-              placeholder={t("writeMessage")}
-              placeholderTextColor="#A0A0A0"
-            />
-            <TouchableOpacity
-              onPress={handleSendMessage}
-              style={styles.sendButton}
-            >
-              <Text style={styles.sendText}>➤</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View
+          style={[
+            styles.inputContainer,
+            { backgroundColor: theme.colors.background.secondary },
+          ]}
+        >
+          <TextInput
+            style={[
+              styles.input,
+              {
+                color: theme.colors.text.primary,
+                backgroundColor: theme.colors.background.primary,
+              },
+            ]}
+            placeholder={t("typeMessage")}
+            placeholderTextColor={theme.colors.text.disabled}
+            value={message}
+            onChangeText={setMessage}
+            multiline
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              {
+                backgroundColor: message.trim()
+                  ? theme.colors.primary.main
+                  : theme.colors.text.disabled,
+              },
+            ]}
+            onPress={sendMessage}
+            disabled={!message.trim()}
+          >
+            <Icon name="send" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-export default GeneralChatScreen;
-
 const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: "#121212" },
-  container: { flex: 1, padding: 10 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E1E1E",
-    marginBottom: 10,
+  container: {
+    flex: 1,
   },
-  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
-  username: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-  endChatButton: {
-    marginLeft: "auto",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#C62828",
-    borderRadius: 8,
+  keyboardAvoidingView: {
+    flex: 1,
   },
-  endChatText: { color: "#FFFFFF", fontSize: 12, fontWeight: "600" },
-  messageWrapper: { marginVertical: 1 },
+  messageList: {
+    padding: 16,
+  },
   messageContainer: {
     maxWidth: "80%",
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
+    padding: 12,
+    borderRadius: 16,
+    marginVertical: 4,
   },
-  myMessage: { alignSelf: "flex-end", backgroundColor: "#075E54" },
-  otherMessage: { alignSelf: "flex-start", backgroundColor: "#1E1E1E" },
-  messageText: { color: "#FFFFFF", fontSize: 16 },
-  messageTime: {
-    color: "#A0A0A0",
-    fontSize: 12,
+  currentUserMessage: {
     alignSelf: "flex-end",
-    marginTop: 5,
+    borderTopRightRadius: 4,
+  },
+  otherUserMessage: {
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  timeText: {
+    fontSize: 12,
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
+  dateSeparator: {
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#1E1E1E",
-    padding: 10,
-  },
-  mediaButton: {
-    marginRight: 10,
-    padding: 6,
-    backgroundColor: "#2E2E2E",
-    borderRadius: 20,
+    padding: 8,
+    alignItems: "flex-end",
   },
   input: {
     flex: 1,
-    backgroundColor: "#1E1E1E",
-    color: "#FFFFFF",
-    padding: 10,
     borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    maxHeight: 100,
   },
   sendButton: {
-    marginLeft: 10,
-    backgroundColor: "#075E54",
-    padding: 10,
+    width: 40,
+    height: 40,
     borderRadius: 20,
-  },
-  sendText: { color: "#FFFFFF", fontSize: 18 },
-  chatEndedText: {
-    color: "#AAAAAA",
-    fontSize: 14,
-    textAlign: "center",
-    marginVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
+
+export default GeneralChatScreen;

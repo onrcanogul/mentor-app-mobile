@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ServiceResponse from "../domain/base/serviceResponse";
+import ServiceResponse, { NoContent } from "../domain/base/serviceResponse";
 import { Mentor } from "../domain/mentor";
 import { LoginModel, RegisterModel, User, UserType } from "../domain/user";
 import api from "./axios/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 import toastrService from "./toastr-service";
 import i18n from "../i18n";
+import { Category } from "../domain/category";
 
 interface DecodedToken {
   name: string;
@@ -145,6 +146,7 @@ class UserService {
         username: decoded.name,
         role: decoded.role,
         imageUrl: "",
+        categories: [],
       };
     } catch (error) {
       console.error("Token çözümlenemedi:", error);
@@ -161,6 +163,18 @@ class UserService {
       const currentTime = Date.now() / 1000;
       return decoded.exp > currentTime;
     } catch (error) {
+      return false;
+    }
+  }
+
+  async updateCategories(userId: string, categories: Category[]) {
+    try {
+      const response: ServiceResponse<NoContent> = (
+        await api.post(`${this.endpoint}/categories/${userId}`, categories)
+      ).data;
+      return response.isSuccessful;
+    } catch (error: any) {
+      toastrService.error(i18n.t(error.response.data.errors[0]));
       return false;
     }
   }
