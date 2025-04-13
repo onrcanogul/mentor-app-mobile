@@ -3,10 +3,10 @@ import { Theme } from "./types";
 export const defaultTheme: Theme = {
   colors: {
     primary: {
-      main: "#FFD700",
-      light: "#FFE44D",
-      dark: "#CCB100",
-      contrastText: "#000000",
+      main: "#4CAF50",
+      light: "#81C784",
+      dark: "#388E3C",
+      contrastText: "#FFFFFF",
     },
     background: {
       primary: "#121212",
@@ -16,14 +16,14 @@ export const defaultTheme: Theme = {
     text: {
       primary: "#FFFFFF",
       secondary: "#B3B3B3",
-      accent: "#FFD700",
+      accent: "#4CAF50",
       disabled: "#666666",
     },
     button: {
-      primary: "#FFD700",
+      primary: "#4CAF50",
       secondary: "#2C2C2C",
       disabled: "#666666",
-      text: "#000000",
+      text: "#FFFFFF",
     },
     input: {
       background: "#1E1E1E",
@@ -51,7 +51,7 @@ export const defaultTheme: Theme = {
     },
     tabBar: {
       background: "#121212",
-      active: "#FFD700",
+      active: "#4CAF50",
       inactive: "#666666",
     },
     drawer: {
