@@ -794,10 +794,15 @@ const MenteeChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     input: {
       flex: 1,
       color: theme.colors.text.primary,
-      fontSize: 17,
-      paddingVertical: Platform.OS === "ios" ? 8 : 6,
+      fontSize: 16,
+      height: Platform.OS === "ios" ? 36 : 40,
+      paddingVertical: 0,
       paddingHorizontal: 8,
-      maxHeight: 100,
+      textAlignVertical: "center",
+      includeFontPadding: false,
+      paddingTop: Platform.OS === "ios" ? 8 : 0,
+      paddingBottom: Platform.OS === "ios" ? 8 : 0,
+      lineHeight: Platform.OS === "ios" ? 20 : undefined,
     },
     mediaMenuButton: {
       padding: 8,

@@ -155,6 +155,7 @@
   "endChatError": "Görüşme sonlandırılamadı. Lütfen tekrar deneyin.",
   "chatHasEnded": "Bu görüşme sonlandırıldı.",
   "writeMessage": "Mesaj yaz...",
+  "typeMessage": "Mesaj yaz...",
 
   "account": "Hesap",
   "profileInfos": "Profil Bilgileri",
@@ -401,5 +402,15 @@
       "organization": "Örn: Amazon Web Services",
       "description": "Sertifika hakkında kısa bir açıklama"
     }
+  },
+
+  "chat": {
+    "typeMessage": "Mesaj yaz...",
+    "image": "Resim",
+    "video": "Video",
+    "audio": "Ses",
+    "recording": "Kayıt yapılıyor...",
+    "send": "Gönder",
+    "attach": "Ekle"
   }
 }

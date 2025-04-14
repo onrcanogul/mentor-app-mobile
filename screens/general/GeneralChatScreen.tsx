@@ -49,6 +49,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 
+const AnimatedTouchable = Reanimated.createAnimatedComponent(TouchableOpacity);
+
 interface MessageGroup {
   date: string;
   data: Message[];
@@ -182,6 +184,7 @@ const GeneralChatScreen = () => {
   const longPressTimeout = useRef<NodeJS.Timeout>();
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const flatListRef = useRef<FlatList<MessageGroup>>(null);
+  const [showMediaMenu, setShowMediaMenu] = useState(false);
 
   useEffect(() => {
     getCurrentUser();
@@ -459,9 +462,7 @@ const GeneralChatScreen = () => {
         // Get video duration
         const { sound } = await Audio.Sound.createAsync({ uri: videoUri });
         const status = await sound.getStatusAsync();
-        const duration = status.durationMillis
-          ? status.durationMillis / 1000
-          : 0;
+        const duration = status.isLoaded ? status.durationMillis / 1000 : 0;
         await sound.unloadAsync();
 
         // Here you would typically upload the video to your server
@@ -623,7 +624,7 @@ const GeneralChatScreen = () => {
       borderTopColor: theme.colors.background.secondary,
       paddingHorizontal: 8,
       paddingVertical: 8,
-      paddingBottom: Platform.OS === "ios" ? 20 : 8,
+      paddingBottom: Platform.OS === "ios" ? 24 : 8,
     },
     inputWrapper: {
       flex: 1,
@@ -631,24 +632,26 @@ const GeneralChatScreen = () => {
       alignItems: "center",
       backgroundColor: theme.colors.background.secondary,
       borderRadius: 25,
-      paddingHorizontal: 5,
-      minHeight: 45,
+      paddingHorizontal: 8,
+      minHeight: 40,
     },
     input: {
       flex: 1,
       color: theme.colors.text.primary,
-      fontSize: 17,
+      fontSize: 16,
       paddingVertical: Platform.OS === "ios" ? 8 : 6,
-      paddingHorizontal: 8,
+      paddingHorizontal: 4,
       maxHeight: 100,
     },
     mediaMenuButton: {
-      padding: 8,
-      marginRight: 0,
+      width: 35,
+      height: 35,
+      justifyContent: "center",
+      alignItems: "center",
     },
     sendButton: {
-      width: 40,
-      height: 40,
+      width: 35,
+      height: 35,
       borderRadius: 20,
       justifyContent: "center",
       alignItems: "center",
@@ -675,6 +678,37 @@ const GeneralChatScreen = () => {
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    attachmentMenu: {
+      position: "absolute",
+      bottom: "100%",
+      left: 0,
+      right: 0,
+      backgroundColor: theme.colors.background.primary,
+      padding: 8,
+      marginBottom: 5,
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 5,
+    },
+    attachmentMenuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      borderRadius: 8,
+    },
+    attachmentMenuText: {
+      color: theme.colors.text.primary,
+      marginLeft: 12,
+      fontSize: 16,
+      fontWeight: "500",
     },
   });
 
@@ -738,38 +772,45 @@ const GeneralChatScreen = () => {
 
         <Reanimated.View entering={SlideInDown} style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
-            <TouchableOpacity style={styles.mediaMenuButton} onPress={() => {}}>
-              <Icon
-                name="emoticon-outline"
-                size={24}
-                color={theme.colors.text.secondary}
-              />
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.mediaMenuButton}
-              onPress={pickImage}
+              onPress={() => setShowMediaMenu(!showMediaMenu)}
             >
               <Icon
-                name="camera"
+                name="plus-circle"
                 size={24}
                 color={theme.colors.text.secondary}
               />
             </TouchableOpacity>
 
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              style={styles.input}
-              placeholder={t("writeMessage")}
-              placeholderTextColor={theme.colors.text.secondary}
-              multiline
-              numberOfLines={1}
-              maxLength={1000}
-            />
+            <Reanimated.View style={inputStyle}>
+              <TextInput
+                value={inputText}
+                onChangeText={setInputText}
+                style={styles.input}
+                placeholder={t("typeMessage")}
+                placeholderTextColor={theme.colors.text.secondary}
+                multiline
+                numberOfLines={1}
+                maxLength={1000}
+              />
+            </Reanimated.View>
+
+            <Reanimated.View style={recordingStyle}>
+              <View style={styles.recordingContainer}>
+                <Text
+                  style={[
+                    styles.recordingText,
+                    { color: theme.colors.text.primary },
+                  ]}
+                >
+                  {t("recording")} {recordingTime}s
+                </Text>
+              </View>
+            </Reanimated.View>
           </View>
 
-          <TouchableOpacity
+          <AnimatedTouchable
             style={[styles.sendButton]}
             onPress={inputText.trim() ? sendMessage : startRecording}
             onPressIn={!inputText.trim() ? handlePressIn : undefined}
@@ -780,7 +821,40 @@ const GeneralChatScreen = () => {
               size={22}
               style={styles.sendIcon}
             />
-          </TouchableOpacity>
+          </AnimatedTouchable>
+
+          {showMediaMenu && (
+            <View style={styles.attachmentMenu}>
+              <TouchableOpacity
+                style={styles.attachmentMenuItem}
+                onPress={() => {
+                  pickImage();
+                  setShowMediaMenu(false);
+                }}
+              >
+                <Icon
+                  name="image"
+                  size={24}
+                  color={theme.colors.text.primary}
+                />
+                <Text style={styles.attachmentMenuText}>{t("chat.image")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.attachmentMenuItem}
+                onPress={() => {
+                  startVideoRecording();
+                  setShowMediaMenu(false);
+                }}
+              >
+                <Icon
+                  name="video"
+                  size={24}
+                  color={theme.colors.text.primary}
+                />
+                <Text style={styles.attachmentMenuText}>{t("chat.video")}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </Reanimated.View>
       </KeyboardAvoidingView>
 
