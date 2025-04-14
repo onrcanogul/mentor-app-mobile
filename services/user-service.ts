@@ -35,6 +35,17 @@ class UserService {
     }
   }
 
+  async addCategory(userId: string, category: Category[]) {
+    try {
+      const response: ServiceResponse<NoContent> = (
+        await api.post(`${this.endpoint}/add-category/${userId}`, category)
+      ).data;
+      return response.isSuccessful;
+    } catch (error: any) {
+      toastrService.error(i18n.t(error.response.data.errors[0]));
+    }
+  }
+
   async login(
     dto: Partial<LoginModel>,
     successCallback: () => void,
