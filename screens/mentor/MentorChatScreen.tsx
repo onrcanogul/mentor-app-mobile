@@ -274,9 +274,11 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       id: Date.now().toString(),
       chatId: chatId,
       senderId: currentUserId,
-      content: inputText.trim(),
+      content: inputText,
       messageType: MessageType.Text,
       isRead: false,
+      mediaUrl: null,
+      duration: null,
       createdDate: new Date(),
       createdBy: currentUserId,
       isDeleted: false,
@@ -293,11 +295,23 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       );
 
       await messageService.create(
-        newMessage,
+        {
+          chatId: chatId,
+          senderId: currentUserId,
+          content: t("typing"),
+          messageType: MessageType.Text,
+          mediaUrl: null,
+          duration: null,
+          isRead: false,
+          createdDate: new Date(),
+          createdBy: "SYSTEM",
+          isDeleted: false,
+        },
         () => {},
         () => {}
       );
     } catch (error) {
+      console.log(error);
       console.error("Mesaj gönderilemedi", error);
       toastrService.error(t("messageNotSent"));
     }
@@ -658,7 +672,18 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
 
     try {
       await messageService.create(
-        newMessage,
+        {
+          chatId: chatId,
+          senderId: currentUserId,
+          content: t("typing"),
+          messageType: MessageType.Text,
+          mediaUrl: null,
+          duration: null,
+          isRead: false,
+          createdDate: new Date(),
+          createdBy: "SYSTEM",
+          isDeleted: false,
+        },
         () => {},
         () => {}
       );

@@ -39,6 +39,7 @@ class MessageService {
         errorCallback();
       }
     } catch (error) {
+      console.log(error.response.data.errors[0]);
       console.error("Mesaj oluşturma hatası:", error);
       errorCallback();
     }

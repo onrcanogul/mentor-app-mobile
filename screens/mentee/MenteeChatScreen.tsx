@@ -294,7 +294,18 @@ const MenteeChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     setInputText("");
     await sendMessage(currentUserId, inputText.trim());
     await messageService.create(
-      newMessage,
+      {
+        senderId: currentUserId,
+        content: inputText,
+        chatId: chatId,
+        messageType: MessageType.Text,
+        mediaUrl: null,
+        duration: null,
+        isRead: false,
+        createdDate: new Date(),
+        createdBy: "SYSTEM",
+        isDeleted: false,
+      },
       () => {},
       () => console.warn("Mesaj DB'ye yazılamadı")
     );
@@ -304,20 +315,19 @@ const MenteeChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const handleSendTypingMessage = async () => {
     if (!chat || !currentUserId) return;
 
-    const typingMessage: Message = {
-      id: Date.now().toString(),
-      chatId: chatId,
-      senderId: currentUserId,
-      content: t("typing"),
-      messageType: MessageType.Text,
-      isRead: false,
-      createdDate: new Date(),
-      createdBy: currentUserId,
-      isDeleted: false,
-    };
-
     await messageService.create(
-      typingMessage,
+      {
+        chatId: chatId,
+        senderId: currentUserId,
+        content: t("typing"),
+        messageType: MessageType.Text,
+        mediaUrl: null,
+        duration: null,
+        isRead: false,
+        createdDate: new Date(),
+        createdBy: "SYSTEM",
+        isDeleted: false,
+      },
       () => {},
       () => console.warn("Typing mesajı DB'ye yazılamadı")
     );
