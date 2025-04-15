@@ -38,7 +38,7 @@ const MenteeProfileScreen = () => {
   });
   const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [categories, setCategories] = useState(mentee?.user.categories);
+  const [categories, setCategories] = useState(mentee?.categories);
   const [isLoading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ const MenteeProfileScreen = () => {
     if (mentee) {
       setMentee(mentee);
       setGoals(mentee.goals);
-      setCategories(mentee.user.categories);
+      setCategories(mentee.categories);
       setContact({ email: mentee.user.email });
     }
     setLoading(false);
@@ -98,7 +98,7 @@ const MenteeProfileScreen = () => {
     }
   };
 
-  if (!mentee || !mentee.user.categories || !mentee.goals) {
+  if (!mentee || !mentee.categories || !mentee.goals) {
     return (
       <SafeAreaView
         style={[
@@ -142,7 +142,7 @@ const MenteeProfileScreen = () => {
 
           <View style={styles.content}>
             <CategoryList
-              categories={mentee.user.categories!}
+              categories={mentee.categories!}
               onEdit={() => setCategoryModalVisible(true)}
               isOwn={isOwn}
             />

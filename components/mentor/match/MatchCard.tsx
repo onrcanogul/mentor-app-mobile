@@ -1,382 +1,325 @@
-import React, { useCallback } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import React from "react";
+import { View, Image, StyleSheet, Dimensions } from "react-native";
+import { Text, Card, Chip } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
 import { Match, MatchStatus } from "../../../domain/match";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
+  FadeInRight,
   Layout,
-  FadeIn,
-  SlideInRight,
   withSpring,
-  withTiming,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   useSharedValue,
-  runOnJS,
-  interpolate,
-  Extrapolate,
 } from "react-native-reanimated";
-import { useNavigation } from "@react-navigation/native";
-import { Theme } from "../../../theme/types";
-import { RootStackParamList } from "../../../navigation/types";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { MaterialIcons } from "@expo/vector-icons";
-import { PanGestureHandler } from "react-native-gesture-handler";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import matchService from "../../../services/match-service";
 
 const { width } = Dimensions.get("window");
+const AnimatedCard = Animated.createAnimatedComponent(Card);
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-type NavigationProp = StackNavigationProp<RootStackParamList>;
+type RootStackParamList = {
+  Mentor: { mentorId: string };
+  Chat: { chatId: string };
+  MentorChat: { chatId: string };
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface MatchCardProps {
   match: Match;
-  index: number;
-  activeTab: "pending" | "accepted" | "rejected";
-  onAccept: (matchId: string) => void;
-  onReject: (matchId: string) => void;
+  index?: number;
+  onAccept?: (matchId: string) => void;
+  onReject?: (matchId: string) => void;
+  setMatches?: any;
+  setLoading?: any;
+  isLoading?: boolean;
 }
 
-export const MatchCard: React.FC<MatchCardProps> = ({
+const MatchCard = ({
   match,
-  index,
-  activeTab,
+  index = 0,
   onAccept,
   onReject,
-}) => {
+  setMatches,
+  setLoading,
+  isLoading,
+}: MatchCardProps) => {
+  const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const navigation = useNavigation<NavigationProp>();
 
-  // Animation values
-  const translateX = useSharedValue(0);
-  const cardScale = useSharedValue(1);
-  const buttonScale = useSharedValue(1);
+  const scale = useSharedValue(1);
 
-  const panGestureHandler = useAnimatedGestureHandler({
-    onActive: (event) => {
-      if (activeTab === "pending") {
-        translateX.value = event.translationX;
-      }
-    },
-    onEnd: (event) => {
-      if (activeTab === "pending") {
-        if (event.translationX > 100) {
-          translateX.value = withSpring(400);
-          runOnJS(onAccept)(match.id);
-        } else if (event.translationX < -100) {
-          translateX.value = withSpring(-400);
-          runOnJS(onReject)(match.id);
-        } else {
-          translateX.value = withSpring(0);
-        }
-      }
-    },
-  });
-
-  const animatedCardStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(
-      translateX.value,
-      [-200, 0, 200],
-      [-30, 0, 30],
-      Extrapolate.CLAMP
-    );
-
-    const opacity = interpolate(
-      Math.abs(translateX.value),
-      [0, 100],
-      [1, 0.5],
-      Extrapolate.CLAMP
-    );
-
+  const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { translateX: translateX.value },
-        { rotate: `${rotate}deg` } as any,
-        { scale: cardScale.value },
-      ] as any,
-      opacity,
+      transform: [{ scale: scale.value }],
     };
   });
 
-  const onButtonPressIn = useCallback(() => {
-    buttonScale.value = withSpring(0.95);
-  }, []);
+  const onPressIn = () => {
+    scale.value = withSpring(0.98);
+  };
 
-  const onButtonPressOut = useCallback(() => {
-    buttonScale.value = withSpring(1);
-  }, []);
+  const onPressOut = () => {
+    scale.value = withSpring(1);
+  };
 
-  const createStyles = (theme: Theme) =>
-    StyleSheet.create({
-      cardContainer: {
-        alignItems: "center",
-        width: "100%",
-        marginVertical: 8,
-      },
-      card: {
-        width: width - 32,
-        maxWidth: 500,
-        borderRadius: 16,
-        backgroundColor: theme.colors.card.background,
-        elevation: 3,
-        overflow: "hidden",
-      },
-      gradientBackground: {
-        padding: 16,
-      },
-      header: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-      },
-      avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        marginRight: 12,
-        borderWidth: 2,
-        borderColor: theme.colors.primary.main,
-      },
-      userInfo: {
-        flex: 1,
-      },
-      username: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: theme.colors.text.primary,
-        marginBottom: 4,
-      },
-      email: {
-        fontSize: 14,
-        color: theme.colors.text.secondary,
-        marginBottom: 8,
-      },
-      categoryContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 8,
-        marginTop: 8,
-      },
-      categoryChip: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        backgroundColor: `${theme.colors.primary.main}15`,
-      },
-      categoryText: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: theme.colors.primary.main,
-      },
-      statusContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "flex-end",
-        marginTop: 12,
-      },
-      statusText: {
-        fontSize: 14,
-        fontWeight: "600",
-        marginLeft: 6,
-      },
-      statusAccepted: {
-        color: theme.colors.success.main,
-      },
-      statusRejected: {
-        color: theme.colors.error.main,
-      },
-      buttonContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 16,
-      },
-      button: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: "center",
-        justifyContent: "center",
-        marginHorizontal: 4,
-      },
-      buttonText: {
-        color: theme.colors.text.primary,
-        fontSize: 14,
-        fontWeight: "600",
-      },
-      acceptButton: {
-        backgroundColor: theme.colors.success.main,
-      },
-      rejectButton: {
-        backgroundColor: theme.colors.error.main,
-      },
-      chatButton: {
-        backgroundColor: theme.colors.primary.main,
-      },
-      chatButtonText: {
-        color: theme.colors.primary.contrastText,
-      },
-    });
-
-  const styles = createStyles(theme);
-
-  const handleChatPress = () => {
-    if (match.chat) {
-      navigation.navigate("Chat", { chatId: match.chat.id });
+  const getStatusColor = (status: MatchStatus) => {
+    switch (status) {
+      case MatchStatus.Accepted:
+        return "#2563eb"; // Modern blue for matched status
+      case MatchStatus.Pending:
+        return theme.colors.primary.main;
+      default:
+        return theme.colors.error.main;
     }
   };
 
-  const renderButtons = () => {
-    if (activeTab === "pending") {
-      return (
-        <>
-          <TouchableOpacity
-            style={[styles.button, styles.acceptButton]}
-            onPress={() => onAccept(match.id)}
-            onPressIn={onButtonPressIn}
-            onPressOut={onButtonPressOut}
-          >
-            <Text style={styles.buttonText}>{t("match.accept")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.rejectButton]}
-            onPress={() => onReject(match.id)}
-            onPressIn={onButtonPressIn}
-            onPressOut={onButtonPressOut}
-          >
-            <Text style={styles.buttonText}>{t("match.reject")}</Text>
-          </TouchableOpacity>
-        </>
-      );
-    } else if (activeTab === "accepted" && match.chat) {
-      return (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.chatButton]}
-            onPress={handleChatPress}
-          >
-            <MaterialIcons
-              name="chat"
-              size={18}
-              color={theme.colors.primary.contrastText}
-            />
-            <Text style={[styles.buttonText, styles.chatButtonText]}>
-              {t("match.actions.openChat")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
+  const getStatusLabel = (status: MatchStatus) => {
+    switch (status) {
+      case MatchStatus.Accepted:
+        return t("match.status.accepted");
+      case MatchStatus.Pending:
+        return t("match.status.pending");
+      default:
+        return t("match.status.rejected");
     }
-    return null;
   };
 
-  const renderStatus = () => {
-    if (activeTab === "accepted") {
-      return (
-        <View style={styles.statusContainer}>
-          <MaterialIcons
-            name="check-circle"
-            size={18}
-            color={theme.colors.success.main}
-          />
-          <Text style={[styles.statusText, styles.statusAccepted]}>
-            {t("match.status.accepted")}
-          </Text>
-        </View>
-      );
-    } else if (activeTab === "rejected") {
-      return (
-        <View style={styles.statusContainer}>
-          <MaterialIcons
-            name="cancel"
-            size={18}
-            color={theme.colors.error.main}
-          />
-          <Text style={[styles.statusText, styles.statusRejected]}>
-            {t("match.status.rejected")}
-          </Text>
-        </View>
-      );
-    }
-    return null;
+  const renderStatusChip = (status: MatchStatus) => {
+    return (
+      <Chip
+        style={[styles.statusChip, { backgroundColor: getStatusColor(status) }]}
+      >
+        <Text style={[styles.chipText, { color: theme.colors.text.primary }]}>
+          {getStatusLabel(status)}
+        </Text>
+      </Chip>
+    );
+  };
+
+  const handleAccept = async () => {
+    if (!setLoading || !setMatches) return;
+    setLoading(true);
+    await matchService.accept(
+      match.id,
+      () => {
+        setMatches((prev: Match[]) =>
+          prev.map((m) =>
+            m.id === match.id ? { ...m, status: MatchStatus.Accepted } : m
+          )
+        );
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+  };
+
+  const handleReject = async () => {
+    if (!setLoading || !setMatches) return;
+    setLoading(true);
+    await matchService.reject(
+      match.id,
+      () => {
+        setMatches((prev: Match[]) =>
+          prev.map((m) =>
+            m.id === match.id ? { ...m, status: MatchStatus.Rejected } : m
+          )
+        );
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
   };
 
   return (
-    <PanGestureHandler
-      onGestureEvent={panGestureHandler}
-      enabled={activeTab === "pending"}
+    <AnimatedCard
+      entering={FadeInRight.delay(index * 100).springify()}
+      layout={Layout.springify()}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.background.secondary,
+          opacity: match.status === MatchStatus.Rejected ? 0.6 : 1,
+        },
+        animatedStyle,
+      ]}
     >
-      <Animated.View
-        entering={SlideInRight.delay(index * 100).springify()}
-        layout={Layout.springify()}
-        style={[styles.cardContainer, animatedCardStyle]}
+      <AnimatedTouchable
+        style={styles.row}
+        onPress={() =>
+          navigation.navigate("Mentor", { mentorId: match.sender.id })
+        }
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
       >
-        <View style={styles.card}>
-          <LinearGradient
-            colors={[
-              theme.colors.background.tertiary,
-              `${theme.colors.primary.main}10`,
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientBackground}
-          >
-            <View style={styles.header}>
-              <Animated.Image
-                entering={FadeIn.delay(index * 150)}
-                source={{
-                  uri:
-                    match.sender.imageUrl || "https://via.placeholder.com/56",
-                }}
-                style={styles.avatar}
-              />
-              <View style={styles.userInfo}>
-                <Text style={styles.username}>{match.sender.username}</Text>
-                <Text style={styles.email}>{match.sender.email}</Text>
-                <Animated.View
-                  entering={FadeIn.delay(index * 200)}
-                  style={styles.categoryContainer}
-                >
-                  {match.sender.categories?.slice(0, 3).map((category, idx) => (
-                    <Animated.View
-                      key={idx}
-                      entering={FadeIn.delay(index * 200 + idx * 100)}
-                      style={styles.categoryChip}
-                    >
-                      <Text style={styles.categoryText}>
-                        {t(`categories.${category.name}`)}
-                      </Text>
-                    </Animated.View>
-                  ))}
-                  {match.sender.categories?.length > 3 && (
-                    <Animated.View
-                      entering={FadeIn.delay(index * 200 + 400)}
-                      style={styles.categoryChip}
-                    >
-                      <Text style={styles.categoryText}>
-                        +{match.sender.categories.length - 3}
-                      </Text>
-                    </Animated.View>
-                  )}
-                </Animated.View>
-              </View>
-            </View>
-            {renderStatus()}
-            <Animated.View
-              entering={FadeIn.delay(index * 300)}
-              style={styles.buttonContainer}
-            >
-              {renderButtons()}
-            </Animated.View>
-          </LinearGradient>
+        <Image
+          source={{
+            uri: "https://ui-avatars.com/api/?name=" + match.sender.username,
+          }}
+          style={styles.avatar}
+        />
+        <View style={styles.infoContainer}>
+          <Text style={[styles.name, { color: theme.colors.text.primary }]}>
+            {match.sender?.username}
+          </Text>
+          <Text style={[styles.field, { color: theme.colors.text.secondary }]}>
+            {match.sender?.email}
+          </Text>
+          {renderStatusChip(match.status)}
         </View>
-      </Animated.View>
-    </PanGestureHandler>
+      </AnimatedTouchable>
+
+      {match.status === MatchStatus.Accepted && (
+        <AnimatedTouchable
+          style={[
+            styles.actionButton,
+            {
+              backgroundColor: "#2563eb",
+              marginTop: 12,
+            },
+          ]}
+          onPress={() =>
+            navigation.navigate("MentorChat", { chatId: match.chatId })
+          }
+        >
+          <View style={styles.buttonContent}>
+            <Text style={[styles.buttonText, { color: "#fff" }]}>
+              {t("match.actions.openChat")}
+            </Text>
+          </View>
+        </AnimatedTouchable>
+      )}
+
+      {match.status === MatchStatus.Pending && (
+        <View style={styles.buttonContainer}>
+          <AnimatedTouchable
+            style={[
+              styles.actionButton,
+              styles.acceptButton,
+              {
+                backgroundColor: "#2563eb", // Modern blue
+                marginRight: 8,
+              },
+            ]}
+            onPress={handleAccept}
+          >
+            <View style={styles.buttonContent}>
+              <Text style={[styles.buttonText, { color: "#fff" }]}>
+                {t("accept")}
+              </Text>
+            </View>
+          </AnimatedTouchable>
+          <AnimatedTouchable
+            style={[
+              styles.actionButton,
+              styles.rejectButton,
+              {
+                backgroundColor: "#e5e7eb", // Soft gray
+                marginLeft: 8,
+              },
+            ]}
+            onPress={handleReject}
+          >
+            <View style={styles.buttonContent}>
+              <Text style={[styles.buttonText, { color: "#222" }]}>
+                {t("reject")}
+              </Text>
+            </View>
+          </AnimatedTouchable>
+        </View>
+      )}
+    </AnimatedCard>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  infoContainer: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  field: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  bio: {
+    marginVertical: 12,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  statusChip: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 24,
+    alignItems: "center",
+    elevation: 2,
+    minWidth: 120,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+  },
+  acceptButton: {},
+  rejectButton: {},
+});
+
+export default MatchCard;

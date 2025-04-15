@@ -53,7 +53,7 @@ const MatchCard = ({ match, setLoading, isLoading, index = 0 }: any) => {
   const getStatusColor = (status: MatchStatus) => {
     switch (status) {
       case MatchStatus.Accepted:
-        return theme.colors.success.main;
+        return "#2563eb"; // Modern blue for matched status
       case MatchStatus.Pending:
         return theme.colors.primary.main;
       default:
@@ -64,11 +64,11 @@ const MatchCard = ({ match, setLoading, isLoading, index = 0 }: any) => {
   const getStatusLabel = (status: MatchStatus) => {
     switch (status) {
       case MatchStatus.Accepted:
-        return t("matched");
+        return t("match.status.accepted");
       case MatchStatus.Pending:
-        return t("waiting");
+        return t("match.status.pending");
       default:
-        return t("ended");
+        return t("match.status.rejected");
     }
   };
 
@@ -130,17 +130,18 @@ const MatchCard = ({ match, setLoading, isLoading, index = 0 }: any) => {
         <AnimatedTouchable
           style={[
             styles.actionButton,
-            { backgroundColor: theme.colors.primary.main },
+            {
+              backgroundColor: "#2563eb",
+              marginTop: 12,
+            },
           ]}
           onPress={() =>
             navigation.navigate("MenteeChat", { chatId: match.chatId })
           }
         >
           <View style={styles.buttonContent}>
-            <Text
-              style={[styles.buttonText, { color: theme.colors.text.primary }]}
-            >
-              {t("goToChat")}
+            <Text style={[styles.buttonText, { color: "#fff" }]}>
+              {t("match.actions.openChat")}
             </Text>
           </View>
         </AnimatedTouchable>

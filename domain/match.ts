@@ -5,6 +5,7 @@ import { User } from "./user";
 export interface Match extends BaseEntity {
   receiverId: string;
   senderId: string;
+  chatId: string;
   status: MatchStatus;
   receiver: User;
   sender: User;

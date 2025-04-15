@@ -99,7 +99,7 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
         selectedCategoryIds.includes(cat.id!)
       );
       const user = await userService.getCurrentUser();
-      const response: boolean | undefined = await userService.addCategory(
+      const response: boolean | undefined = await menteeService.addCategory(
         user.id,
         selected
       );

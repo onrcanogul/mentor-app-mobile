@@ -9,4 +9,5 @@ export interface Mentee extends BaseEntity {
   goals: Goal[];
   requestMessage: string;
   matchingCount: number;
+  categories: Category[];
 }

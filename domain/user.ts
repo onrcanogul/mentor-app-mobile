@@ -12,7 +12,6 @@ export interface User {
   username: string;
   role: string;
   imageUrl: string;
-  categories: Category[];
 }
 
 export interface LoginModel {

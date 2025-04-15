@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MatchSection from "../../components/mentee/match/MatchSection";
+import MatchSection from "../../components/mentor/match/MatchSection";
 import { Match, MatchStatus } from "../../domain/match";
 import userService from "../../services/user-service";
 import matchService from "../../services/match-service";
@@ -90,8 +90,9 @@ const MentorMatchScreen = () => {
           <MatchSection
             title={t("activeMatches")}
             matches={matches.filter((m) => m.status === MatchStatus.Accepted)}
-            isVisible={showActive}
+            visible={showActive}
             onToggle={() => setShowActive(!showActive)}
+            setMatches={setMatches}
             setLoading={setLoading}
             isLoading={isLoading}
           />
@@ -103,8 +104,9 @@ const MentorMatchScreen = () => {
           <MatchSection
             title={t("waitingMatches")}
             matches={matches.filter((m) => m.status === MatchStatus.Pending)}
-            isVisible={showWaiting}
+            visible={showWaiting}
             onToggle={() => setShowWaiting(!showWaiting)}
+            setMatches={setMatches}
             setLoading={setLoading}
             isLoading={isLoading}
           />
@@ -116,8 +118,9 @@ const MentorMatchScreen = () => {
           <MatchSection
             title={t("pastMatches")}
             matches={matches.filter((m) => m.status === MatchStatus.Rejected)}
-            isVisible={showPast}
+            visible={showPast}
             onToggle={() => setShowPast(!showPast)}
+            setMatches={setMatches}
             setLoading={setLoading}
             isLoading={isLoading}
           />
