@@ -1,5 +1,5 @@
 import "./i18n";
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import MentorTabNavigator from "./bars/MentorNavigationBar";
@@ -14,8 +14,7 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import { navigationRef } from "./RootNavigation";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { UserType } from "./domain/user";
-import { ActivityIndicator } from "react-native-paper";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import SettingsScreen from "./screens/common/SettingsScreen";
 import AiChatScreen from "./screens/mentee/AiChatScreen";
 import MentorMatchScreen from "./screens/mentor/MentorMatchScreen";
@@ -28,6 +27,7 @@ import GeneralMatchScreen from "./screens/general/GeneralMatchScreen";
 import GeneralProfileScreen from "./screens/general/GeneralProfileScreen";
 import GeneralChatScreen from "./screens/general/GeneralChatScreen";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
+import userService from "./services/user-service";
 
 const Stack = createStackNavigator();
 
@@ -113,9 +113,31 @@ const ToastWrapper = () => {
 };
 
 const AppNavigator = () => {
-  const { isAuthenticated, role, isLoading } = useAuth();
-  console.log("***************************");
-  console.log(role);
+  const { isAuthenticated, role, isLoading, setAuthenticated, setRole } =
+    useAuth();
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    const checkInitialAuth = async () => {
+      try {
+        const [isAuth, user] = await Promise.all([
+          userService.isAuthenticated(),
+          userService.getCurrentUser(),
+        ]);
+
+        if (isAuth && user) {
+          setAuthenticated(true);
+          if (user.role === "Mentor") setRole(UserType.Mentor);
+          else if (user.role === "Mentee") setRole(UserType.Mentee);
+          else if (user.role === "General") setRole(UserType.General);
+        }
+      } catch (error) {
+        console.error("Initial auth check error:", error);
+      }
+    };
+
+    checkInitialAuth();
+  }, []);
 
   if (isLoading) {
     return (
@@ -124,18 +146,20 @@ const AppNavigator = () => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#121212",
+          backgroundColor: theme.colors.background.primary,
         }}
       >
-        <ActivityIndicator size="large" color="#FFD700" />
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
     <>
-      {/* StatusBar'ı Burada Ayarlıyoruz */}
-      <StatusBar style="light" backgroundColor="#121212" />
+      <StatusBar
+        style="light"
+        backgroundColor={theme.colors.background.primary}
+      />
 
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: "slide_from_right" }}
@@ -170,12 +194,12 @@ const AppNavigator = () => {
         )}
         <Stack.Screen name="Mentor" component={MentorProfileScreen} />
         <Stack.Screen name="Mentee" component={MenteeProfileScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="AIChat" component={AiChatScreen} />
         <Stack.Screen name="MentorMatch" component={MentorMatchScreen} />
         <Stack.Screen name="MenteeMatch" component={MenteeMatchScreen} />
         <Stack.Screen name="MenteeChat" component={MenteeChatScreen} />
         <Stack.Screen name="MentorChat" component={MentorChatScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="AIChat" component={AiChatScreen} />
       </Stack.Navigator>
     </>
   );
@@ -183,14 +207,14 @@ const AppNavigator = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <AuthProvider>
         <NavigationContainer ref={navigationRef}>
           <AppNavigator />
           <ToastWrapper />
         </NavigationContainer>
-      </ThemeProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

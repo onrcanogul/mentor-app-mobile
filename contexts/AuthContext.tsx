@@ -32,19 +32,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           userService.isAuthenticated(),
           userService.getCurrentUser(),
         ]);
-        setAuthenticated(isAuth);
-        if (user?.role === "Mentor") setRole(UserType.Mentor);
-        else if (user?.role === "Mentee") setRole(UserType.Mentee);
-        else if (user?.role === "General") setRole(UserType.General);
+
+        if (isAuth && user) {
+          // Token geçerli, kullanıcıyı otomatik giriş yaptır
+          setAuthenticated(true);
+          if (user.role === "Mentor") setRole(UserType.Mentor);
+          else if (user.role === "Mentee") setRole(UserType.Mentee);
+          else if (user.role === "General") setRole(UserType.General);
+        } else {
+          // Token geçersiz veya kullanıcı bulunamadı, refresh token ile yenilemeyi dene
+          await userService.loginWithRefreshToken(
+            () => {
+              setAuthenticated(true);
+              if (user?.role === "Mentor") setRole(UserType.Mentor);
+              else if (user?.role === "Mentee") setRole(UserType.Mentee);
+              else if (user?.role === "General") setRole(UserType.General);
+            },
+            () => {
+              // Refresh token da geçersiz, kullanıcıyı çıkış yaptır
+              setAuthenticated(false);
+              setRole(null);
+            }
+          );
+        }
       } catch (err) {
         console.error("Auth check error:", err);
+        setAuthenticated(false);
+        setRole(null);
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-  }, [isAuthenticated, role]);
+  }, []);
 
   return (
     <AuthContext.Provider
