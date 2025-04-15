@@ -1,13 +1,8 @@
 {
-  "cli": {
-    "version": ">= 3.13.0"
-  },
   "build": {
     "production": {
       "android": {
-        "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease",
-        "versionCode": 2
+        "buildType": "app-bundle"
       }
     }
   }
