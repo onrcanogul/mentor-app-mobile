@@ -54,85 +54,71 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         statusBarTranslucent={true}
         onRequestClose={onClose}
       >
-        <View style={styles.container}>
-          <Pressable
-            onPress={onClose}
-            style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.85)" }]}
-          >
-            <ModalBackground
-              {...modalProps}
+        <View
+          style={[styles.container, { backgroundColor: "rgba(0, 0, 0, 0.85)" }]}
+        >
+          <Pressable onPress={onClose} style={styles.overlay}>
+            <View
               style={[
-                styles.overlay,
-                Platform.OS === "ios" && { backgroundColor: "transparent" },
+                styles.modalContainer,
+                { backgroundColor: theme.colors.card.background },
               ]}
             >
-              <Pressable>
-                <View
-                  style={[
-                    styles.modalContainer,
-                    { backgroundColor: theme.colors.card.background },
-                  ]}
-                >
-                  <View style={styles.modal}>
-                    <View style={styles.header}>
-                      <IconButton
-                        icon="alert-circle"
-                        size={32}
-                        iconColor={theme.colors.primary.main}
-                      />
-                    </View>
+              <View style={styles.modal}>
+                <View style={styles.header}>
+                  <IconButton
+                    icon="alert-circle"
+                    size={32}
+                    iconColor={theme.colors.primary.main}
+                  />
+                </View>
 
+                <Text
+                  style={[styles.message, { color: theme.colors.text.primary }]}
+                >
+                  {message}
+                </Text>
+
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    onPress={onClose}
+                    style={[
+                      styles.button,
+                      styles.cancelButton,
+                      { borderColor: theme.colors.input.border },
+                    ]}
+                  >
                     <Text
                       style={[
-                        styles.message,
+                        styles.buttonText,
                         { color: theme.colors.text.primary },
                       ]}
                     >
-                      {message}
+                      {cancelText}
                     </Text>
+                  </TouchableOpacity>
 
-                    <View style={styles.buttonContainer}>
-                      <TouchableOpacity
-                        onPress={onClose}
-                        style={[
-                          styles.button,
-                          styles.cancelButton,
-                          { borderColor: theme.colors.input.border },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.buttonText,
-                            { color: theme.colors.text.primary },
-                          ]}
-                        >
-                          {cancelText}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={onConfirm}
-                        style={[
-                          styles.button,
-                          styles.confirmButton,
-                          { backgroundColor: theme.colors.error.main },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.buttonText,
-                            styles.confirmText,
-                            { color: theme.colors.error.contrastText },
-                          ]}
-                        >
-                          {confirmText}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                  <TouchableOpacity
+                    onPress={onConfirm}
+                    style={[
+                      styles.button,
+                      styles.confirmButton,
+                      { backgroundColor: theme.colors.error.main },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonText,
+                        styles.confirmText,
+                        { color: theme.colors.error.contrastText },
+                      ]}
+                    >
+                      {confirmText}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </Pressable>
-            </ModalBackground>
+              </View>
+            </View>
           </Pressable>
         </View>
       </Modal>
@@ -143,8 +129,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:
-      Platform.OS === "android" ? "rgba(0, 0, 0, 0.85)" : "transparent",
   },
   overlay: {
     flex: 1,
