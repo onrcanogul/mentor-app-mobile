@@ -30,6 +30,30 @@ class MatchService {
     }
   }
 
+  async getForCommunity(
+    id: string,
+    successCallback: () => void,
+    errorCallback: () => void
+  ): Promise<Match[]> {
+    try {
+      console.log("Fetching matches for user:", id);
+      const response: ServiceResponse<Match[]> = (
+        await api.get(`${this.endpoint}/community/${id}`)
+      ).data;
+      console.log("Match service response:", response);
+      if (response.isSuccessful) {
+        successCallback();
+        return response.data;
+      }
+      errorCallback();
+      return [];
+    } catch (error) {
+      console.error("Error in match service:", error);
+      errorCallback();
+      return [];
+    }
+  }
+
   async create(
     model: Partial<Match>,
     successCallback: (data: Match) => void,
@@ -59,6 +83,7 @@ class MatchService {
       const response: ServiceResponse<Match> = (
         await api.post(this.endpoint + "/community", model)
       ).data;
+      console.log("Match service response:", response);
       if (response.isSuccessful) {
         successCallback(response.data);
         return response.data;

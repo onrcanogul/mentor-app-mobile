@@ -56,12 +56,13 @@ const GeneralChatListScreen = () => {
 
   async function fetchChats(userId: string) {
     setLoading(true);
-    const chatResult = await chatService.get(
+    const chatResult = await chatService.getForCommunity(
       userId,
       () => {},
       () => {}
     );
     if (chatResult) setChats(chatResult);
+    console.log(chatResult);
     setLoading(false);
   }
 

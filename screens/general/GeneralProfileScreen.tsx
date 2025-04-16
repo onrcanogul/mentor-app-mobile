@@ -5,8 +5,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import { Category } from "../../domain/category";
-import CategoryList from "../../components/mentor/profile/CategoryList";
-import CategoryEditModal from "../../components/mentee/profile/modals/CategoryEditModal";
+import CategoryList from "../../components/general/profile/CategorySelection";
+import CategoryEditModal from "../../components/general/profile/modals/CategoryEditModal";
 import LoadingSpinner from "../../utils/spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,10 @@ import { useTheme } from "../../contexts/ThemeContext";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { RootStackParamList } from "../../navigation/types";
+import menteeService from "../../services/mentee-service";
+import mentorService from "../../services/mentor-service";
+import communityUserService from "../../services/community-user-service";
+import { UserType } from "../../domain/user";
 
 const GeneralProfileScreen = () => {
   const navigator =
@@ -36,11 +40,58 @@ const GeneralProfileScreen = () => {
   }, []);
 
   const fetchUser = async () => {
-    setLoading(true);
-    const currentUser = await userService.getCurrentUser();
-    setUser(currentUser);
-    setCategories(currentUser.categories || []);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const currentUser = await userService.getCurrentUser();
+      if (!currentUser) {
+        toastrService.error(t("userNotFound"));
+        return;
+      }
+
+      setUser(currentUser);
+
+      let userWithCategories;
+      console.log(currentUser);
+      const userRole = getUserTypeFromRole(currentUser.role);
+      console.log(userRole);
+      switch (userRole) {
+        case UserType.Mentee:
+          userWithCategories = await menteeService.get(currentUser.id);
+          break;
+        case UserType.Mentor:
+          userWithCategories = await mentorService.get(currentUser.id);
+          break;
+        case UserType.General:
+          userWithCategories = await communityUserService.get(currentUser.id);
+          break;
+        default:
+          toastrService.error(t("invalidUserRole"));
+          return;
+      }
+
+      if (userWithCategories) {
+        setCategories(userWithCategories.categories || []);
+      }
+    } catch (error) {
+      toastrService.error(t("errorFetchingProfile"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getUserTypeFromRole = (role: string | undefined): UserType => {
+    if (!role) return UserType.General;
+
+    switch (role.toLowerCase()) {
+      case "mentor":
+        return UserType.Mentor;
+      case "mentee":
+        return UserType.Mentee;
+      case "general":
+        return UserType.General;
+      default:
+        return UserType.General;
+    }
   };
 
   const handleLogout = async () => {
@@ -112,6 +163,14 @@ const GeneralProfileScreen = () => {
     );
   }
 
+  const userRole = getUserTypeFromRole(user.role);
+  const roleText =
+    userRole === UserType.Mentor
+      ? "Mentor"
+      : userRole === UserType.Mentee
+      ? "Mentee"
+      : "General";
+
   return (
     <SafeAreaView
       style={[
@@ -134,7 +193,7 @@ const GeneralProfileScreen = () => {
           username={user.username}
           email={user.email}
           imageUrl={user.imageUrl}
-          role="General"
+          role={roleText}
           isOwn={true}
           onImagePress={handleImageUpload}
           onLogoutPress={() => setLogoutDialogVisible(true)}

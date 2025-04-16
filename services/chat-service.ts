@@ -23,6 +23,22 @@ class ChatService {
     }
   }
 
+  async getForCommunity(
+    userId: string,
+    successCallback: () => void,
+    errorCallback: () => void
+  ) {
+    const response: ServiceResponse<Chat[]> = (
+      await api.get(`${this.endpoint}/community/${userId}`)
+    ).data;
+    if (response.isSuccessful) {
+      successCallback();
+      return response.data;
+    } else {
+      errorCallback();
+    }
+  }
+
   async getById(
     id: string,
     successCallback: () => void,

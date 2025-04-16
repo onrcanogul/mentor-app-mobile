@@ -6,21 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-
 import { useChatSocket } from "../../hooks/useChatSocket";
 import messageService from "../../services/message-service";
 import chatService from "../../services/chat-service";
 import userService from "../../services/user-service";
 import toastrService from "../../services/toastr-service";
 import { useTheme } from "../../contexts/ThemeContext";
-
 import { Message, MessageType } from "../../domain/message";
 import { Chat, ChatStatus } from "../../domain/chat";
 import { formatDate } from "../../utils/dateFormatter";

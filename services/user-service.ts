@@ -10,7 +10,7 @@ import { Category } from "../domain/category";
 
 interface DecodedToken {
   name: string;
-  role: string;
+  Role: string;
   email: string;
   exp: number;
   Id: string;
@@ -100,15 +100,13 @@ class UserService {
 
     try {
       const response = await api.post<ServiceResponse<Token>>(
-        `${this.endpoint}/login-with-refresh`,
-        { refreshToken }
+        `${this.endpoint}/login-with-refresh/${refreshToken}`
       );
 
       const resData = response.data;
       if (resData.isSuccessful && resData.data) {
         await AsyncStorage.setItem("accessToken", resData.data.accessToken);
         await AsyncStorage.setItem("refreshToken", resData.data.refreshToken);
-        await AsyncStorage.setItem("isAuthenticated", "true");
         await AsyncStorage.setItem("role", storedRole);
         successCallback();
         return resData.data;
@@ -141,14 +139,58 @@ class UserService {
     errorCallback: () => void
   ) {
     try {
+      // Validate required fields
+      if (
+        !user.userName ||
+        !user.email ||
+        !user.password ||
+        !user.confirmPassword ||
+        !user.fullName
+      ) {
+        toastrService.error(i18n.t("allFieldsRequired"));
+        errorCallback();
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(user.email)) {
+        toastrService.error(i18n.t("invalidEmail"));
+        errorCallback();
+        return;
+      }
+
+      // Validate password strength
+      if (user.password.length < 8) {
+        toastrService.error(i18n.t("passwordTooShort"));
+        errorCallback();
+        return;
+      }
+
+      // Validate password match
+      if (user.password !== user.confirmPassword) {
+        toastrService.error(i18n.t("passwordsDoNotMatch"));
+        errorCallback();
+        return;
+      }
+
       const response: ServiceResponse<Mentor> = (
         await api.post(`${this.endpoint}/register`, user)
       ).data;
+
       if (response.isSuccessful) {
         successCallback();
         return response.data;
+      } else {
+        toastrService.error(i18n.t("registrationFailed"));
+        errorCallback();
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.data?.errors) {
+        toastrService.error(i18n.t(error.response.data.errors[0]));
+      } else {
+        toastrService.error(i18n.t("unexpectedError"));
+      }
       errorCallback();
     }
   }
@@ -162,9 +204,8 @@ class UserService {
         id: decoded.Id,
         email: decoded.email,
         username: decoded.name,
-        role: decoded.role,
+        role: decoded.Role,
         imageUrl: "",
-        categories: [],
       };
     } catch (error) {
       console.error("Token çözümlenemedi:", error);

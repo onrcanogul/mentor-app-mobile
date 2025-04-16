@@ -25,29 +25,103 @@ const RegisterScreen = () => {
   const { userType } = route.params;
   const { theme } = useTheme();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({
+    username: "",
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      username: "",
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    // Username validation
+    if (!formData.username.trim()) {
+      newErrors.username = t("usernameRequired");
+      isValid = false;
+    } else if (formData.username.length < 3) {
+      newErrors.username = t("usernameTooShort");
+      isValid = false;
+    }
+
+    // Full name validation
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = t("fullNameRequired");
+      isValid = false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = t("emailRequired");
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = t("invalidEmail");
+      isValid = false;
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = t("passwordRequired");
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = t("passwordTooShort");
+      isValid = false;
+    }
+
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = t("confirmPasswordRequired");
+      isValid = false;
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = t("passwordsDoNotMatch");
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      toastrService.error(t("passwordsDoNotMatch"));
+    if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     await userService.register(
       {
-        userName: username,
-        email,
-        password,
+        userName: formData.username,
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
         userRole: userType,
-        confirmPassword,
-        fullName: username,
       },
       () => {
         toastrService.success(t("registerSuccess"));
@@ -119,16 +193,19 @@ const RegisterScreen = () => {
           <View style={styles.form}>
             <TextInput
               label={t("username")}
-              value={username}
-              onChangeText={setUsername}
+              value={formData.username}
+              onChangeText={(value) => handleInputChange("username", value)}
               mode="outlined"
               style={[
                 styles.input,
                 { backgroundColor: theme.colors.input.background },
               ]}
               textColor={theme.colors.input.text}
-              outlineColor={theme.colors.input.border}
+              outlineColor={
+                errors.username ? theme.colors.error : theme.colors.input.border
+              }
               activeOutlineColor={theme.colors.button.primary}
+              error={!!errors.username}
               left={
                 <TextInput.Icon
                   icon="account"
@@ -136,19 +213,55 @@ const RegisterScreen = () => {
                 />
               }
             />
+            {errors.username && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {errors.username}
+              </Text>
+            )}
 
             <TextInput
-              label={t("email")}
-              value={email}
-              onChangeText={setEmail}
+              label={t("fullName")}
+              value={formData.fullName}
+              onChangeText={(value) => handleInputChange("fullName", value)}
               mode="outlined"
               style={[
                 styles.input,
                 { backgroundColor: theme.colors.input.background },
               ]}
               textColor={theme.colors.input.text}
-              outlineColor={theme.colors.input.border}
+              outlineColor={
+                errors.fullName ? theme.colors.error : theme.colors.input.border
+              }
               activeOutlineColor={theme.colors.button.primary}
+              error={!!errors.fullName}
+              left={
+                <TextInput.Icon
+                  icon="account-card"
+                  color={theme.colors.text.secondary}
+                />
+              }
+            />
+            {errors.fullName && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {errors.fullName}
+              </Text>
+            )}
+
+            <TextInput
+              label={t("email")}
+              value={formData.email}
+              onChangeText={(value) => handleInputChange("email", value)}
+              mode="outlined"
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.input.background },
+              ]}
+              textColor={theme.colors.input.text}
+              outlineColor={
+                errors.email ? theme.colors.error : theme.colors.input.border
+              }
+              activeOutlineColor={theme.colors.button.primary}
+              error={!!errors.email}
               left={
                 <TextInput.Icon
                   icon="email"
@@ -158,11 +271,16 @@ const RegisterScreen = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {errors.email && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {errors.email}
+              </Text>
+            )}
 
             <TextInput
               label={t("password")}
-              value={password}
-              onChangeText={setPassword}
+              value={formData.password}
+              onChangeText={(value) => handleInputChange("password", value)}
               secureTextEntry={!showPassword}
               mode="outlined"
               style={[
@@ -170,8 +288,11 @@ const RegisterScreen = () => {
                 { backgroundColor: theme.colors.input.background },
               ]}
               textColor={theme.colors.input.text}
-              outlineColor={theme.colors.input.border}
+              outlineColor={
+                errors.password ? theme.colors.error : theme.colors.input.border
+              }
               activeOutlineColor={theme.colors.button.primary}
+              error={!!errors.password}
               left={
                 <TextInput.Icon
                   icon="lock"
@@ -186,11 +307,18 @@ const RegisterScreen = () => {
                 />
               }
             />
+            {errors.password && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {errors.password}
+              </Text>
+            )}
 
             <TextInput
               label={t("confirmPassword")}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              value={formData.confirmPassword}
+              onChangeText={(value) =>
+                handleInputChange("confirmPassword", value)
+              }
               secureTextEntry={!showConfirmPassword}
               mode="outlined"
               style={[
@@ -198,8 +326,13 @@ const RegisterScreen = () => {
                 { backgroundColor: theme.colors.input.background },
               ]}
               textColor={theme.colors.input.text}
-              outlineColor={theme.colors.input.border}
+              outlineColor={
+                errors.confirmPassword
+                  ? theme.colors.error
+                  : theme.colors.input.border
+              }
               activeOutlineColor={theme.colors.button.primary}
+              error={!!errors.confirmPassword}
               left={
                 <TextInput.Icon
                   icon="lock-check"
@@ -214,6 +347,11 @@ const RegisterScreen = () => {
                 />
               }
             />
+            {errors.confirmPassword && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {errors.confirmPassword}
+              </Text>
+            )}
 
             <Button
               mode="contained"
@@ -287,7 +425,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   input: {
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 8,
   },
   registerButton: {
     paddingVertical: 8,

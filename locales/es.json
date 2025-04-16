@@ -100,9 +100,11 @@
 
   "matches": "Coincidencias",
   "searchMentee": "Buscar mentee...",
-  "activeMatches": "Coincidencias Activas",
-  "waitingMatches": "Coincidencias Pendientes",
-  "pastMatches": "Coincidencias Pasadas",
+  "activeMatches": "Conexiones Activas",
+  "waitingMatches": "Conexiones Pendientes",
+  "incomingMatches": "Conexiones Entrantes",
+  "outgoingMatches": "Conexiones Salientes",
+  "pastMatches": "Conexiones Pasadas",
   "findMentor": "Buscar mentor",
 
   "notifications": "Notificaciones",
@@ -269,16 +271,16 @@
   "home2Description": "Únase a la comunidad y comparta experiencias",
 
   "match": {
-    "title": "Solicitudes de Emparejamiento",
+    "title": "Solicitudes de Conexión",
     "tabs": {
       "pending": "Pendientes",
-      "accepted": "Aceptados",
-      "rejected": "Rechazados"
+      "accepted": "Aceptadas",
+      "rejected": "Rechazadas"
     },
     "empty": {
-      "pending": "No hay solicitudes pendientes",
-      "accepted": "No hay emparejamientos aceptados",
-      "rejected": "No hay emparejamientos rechazados"
+      "pending": "No hay solicitudes de conexión pendientes",
+      "accepted": "No hay conexiones aceptadas",
+      "rejected": "No hay conexiones rechazadas"
     },
     "actions": {
       "accept": "Aceptar",
@@ -286,35 +288,28 @@
       "openChat": "Abrir Chat"
     },
     "status": {
-      "accepted": "Emparejamiento aceptado",
-      "rejected": "Emparejamiento rechazado",
-      "waiting": "Pendiente",
-      "matched": "Emparejado",
-      "ended": "Finalizado"
+      "accepted": "Aceptada",
+      "rejected": "Rechazada",
+      "pending": "Pendiente",
+      "incoming": "Entrante",
+      "outgoing": "Saliente"
     },
     "success": {
-      "accept": "Emparejamiento aceptado exitosamente",
-      "reject": "Emparejamiento rechazado exitosamente",
-      "match": "Emparejamiento exitoso"
+      "accept": "Conexión aceptada exitosamente",
+      "reject": "Conexión rechazada exitosamente"
     },
     "errors": {
-      "fetch": "Error al cargar los emparejamientos",
-      "accept": "Error al aceptar el emparejamiento",
-      "reject": "Error al rechazar el emparejamiento",
-      "match": "Error en el emparejamiento",
-      "count": "La cantidad de pendientes inexpertos es mayor que 4"
+      "accept": "Ocurrió un error al aceptar la conexión",
+      "reject": "Ocurrió un error al rechazar la conexión"
     },
     "sections": {
-      "active": "Coincidencias Activas",
-      "waiting": "Coincidencias Pendientes",
-      "past": "Coincidencias Pasadas"
+      "active": "Conexiones Activas",
+      "outgoing": "Conexiones Salientes",
+      "past": "Conexiones Pasadas"
     },
     "notifications": {
       "new": "¡Un mentee te ha enviado una solicitud de mentoría!",
-      "title": "Nueva coincidencia con un mentee"
-    },
-    "search": {
-      "placeholder": "Buscar por nombre o correo..."
+      "title": "Nueva Conexión de Mentee"
     }
   },
 

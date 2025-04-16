@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import MatchSection from "../../components/general/match/MatchSection";
-import { Match, MatchStatus } from "../../domain/match";
+import { Match, MatchStatus, MatchType } from "../../domain/match";
 import { useTranslation } from "react-i18next";
 import matchService from "../../services/match-service";
 import { useFocusEffect } from "@react-navigation/native";
@@ -29,9 +29,11 @@ const GeneralMatchScreen = () => {
   const [isLoading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showActiveMatches, setShowActiveMatches] = useState(true);
-  const [showWaitingMatches, setShowWaitingMatches] = useState(true);
+  const [showIncomingMatches, setShowIncomingMatches] = useState(true);
+  const [showOutgoingMatches, setShowOutgoingMatches] = useState(true);
   const [showPastMatches, setShowPastMatches] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useFocusEffect(
     useCallback(() => {
@@ -43,11 +45,16 @@ const GeneralMatchScreen = () => {
     setLoading(true);
     try {
       const currentUser = await userService.getCurrentUser();
-      const result = await matchService.get(
+      setCurrentUserId(currentUser.id);
+      console.log("Current User:", currentUser);
+
+      const result = await matchService.getForCommunity(
         currentUser.id,
         () => {},
         () => {}
       );
+      console.log("Fetched Matches:", result);
+
       if (result) setMatches(result);
     } catch (error) {
       console.warn("Error fetching matches", error);
@@ -58,14 +65,16 @@ const GeneralMatchScreen = () => {
 
   const handlePress = async () => {
     const user = await userService.getCurrentUser();
+    console.log("Creating match with user:", user.id);
     await matchService.createCommunity(
       {
         senderId: user.id,
         createdBy: "SYSTEM",
       },
       (match) => {
+        console.log("Created Match:", match);
         toastrService.success(t("matchSuccess"));
-        setMatches((prev) => [...prev, match]);
+        setMatches((prevMatches) => [...prevMatches, match]);
       },
       () => {
         toastrService.error(t("matchError"));
@@ -73,9 +82,46 @@ const GeneralMatchScreen = () => {
     );
   };
 
-  const filteredMatches = matches.filter((match) =>
-    match.receiver.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getMatchesByStatus = (status: MatchStatus) => {
+    if (!matches || matches.length === 0) return [];
+    return matches.filter((m) => m?.status === status);
+  };
+
+  const getIncomingMatches = () => {
+    if (!matches || matches.length === 0) return [];
+    console.log("Filtering Incoming Matches:");
+    console.log("Current User ID:", currentUserId);
+    console.log("All Matches:", matches);
+
+    const incomingMatches = matches.filter((m) => {
+      console.log("Checking match:", m);
+      console.log("Is Pending?", m?.status === MatchStatus.Pending);
+      console.log("Is receiver?", m?.receiverId === currentUserId);
+      return (
+        m?.status === MatchStatus.Pending && m.receiverId === currentUserId
+      );
+    });
+
+    console.log("Incoming Matches Result:", incomingMatches);
+    return incomingMatches;
+  };
+
+  const getOutgoingMatches = () => {
+    if (!matches || matches.length === 0) return [];
+    console.log("Filtering Outgoing Matches:");
+    console.log("Current User ID:", currentUserId);
+    console.log("All Matches:", matches);
+
+    const outgoingMatches = matches.filter((m) => {
+      console.log("Checking match:", m);
+      console.log("Is Pending?", m?.status === MatchStatus.Pending);
+      console.log("Is sender?", m?.senderId === currentUserId);
+      return m?.status === MatchStatus.Pending && m.senderId === currentUserId;
+    });
+
+    console.log("Outgoing Matches Result:", outgoingMatches);
+    return outgoingMatches;
+  };
 
   return (
     <SafeAreaView
@@ -120,17 +166,12 @@ const GeneralMatchScreen = () => {
         >
           <MatchSection
             title={t("activeMatches")}
-            matches={
-              searchQuery
-                ? filteredMatches.filter(
-                    (m) => m.status === MatchStatus.Accepted
-                  )
-                : matches.filter((m) => m.status === MatchStatus.Accepted)
-            }
+            matches={getMatchesByStatus(MatchStatus.Accepted)}
             isVisible={showActiveMatches}
             onToggle={() => setShowActiveMatches(!showActiveMatches)}
             setLoading={setLoading}
             isLoading={isLoading}
+            setMatches={setMatches}
           />
         </Animated.View>
 
@@ -138,18 +179,13 @@ const GeneralMatchScreen = () => {
           entering={FadeInDown.duration(600).delay(600).springify()}
         >
           <MatchSection
-            title={t("waitingMatches")}
-            matches={
-              searchQuery
-                ? filteredMatches.filter(
-                    (m) => m.status === MatchStatus.Pending
-                  )
-                : matches.filter((m) => m.status === MatchStatus.Pending)
-            }
-            isVisible={showWaitingMatches}
-            onToggle={() => setShowWaitingMatches(!showWaitingMatches)}
+            title={t("incomingMatches")}
+            matches={getIncomingMatches()}
+            isVisible={showIncomingMatches}
+            onToggle={() => setShowIncomingMatches(!showIncomingMatches)}
             setLoading={setLoading}
             isLoading={isLoading}
+            setMatches={setMatches}
           />
         </Animated.View>
 
@@ -157,18 +193,27 @@ const GeneralMatchScreen = () => {
           entering={FadeInDown.duration(600).delay(800).springify()}
         >
           <MatchSection
+            title={t("outgoingMatches")}
+            matches={getOutgoingMatches()}
+            isVisible={showOutgoingMatches}
+            onToggle={() => setShowOutgoingMatches(!showOutgoingMatches)}
+            setLoading={setLoading}
+            isLoading={isLoading}
+            setMatches={setMatches}
+          />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.duration(600).delay(1000).springify()}
+        >
+          <MatchSection
             title={t("pastMatches")}
-            matches={
-              searchQuery
-                ? filteredMatches.filter(
-                    (m) => m.status === MatchStatus.Rejected
-                  )
-                : matches.filter((m) => m.status === MatchStatus.Rejected)
-            }
+            matches={getMatchesByStatus(MatchStatus.Rejected)}
             isVisible={showPastMatches}
             onToggle={() => setShowPastMatches(!showPastMatches)}
             setLoading={setLoading}
             isLoading={isLoading}
+            setMatches={setMatches}
           />
         </Animated.View>
       </Animated.ScrollView>

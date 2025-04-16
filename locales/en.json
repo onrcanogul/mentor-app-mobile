@@ -92,6 +92,8 @@
   "searchMentee": "Search mentee...",
   "activeMatches": "Active Matches",
   "waitingMatches": "Waiting Matches",
+  "incomingMatches": "Incoming Matches",
+  "outgoingMatches": "Outgoing Matches",
   "pastMatches": "Past Matches",
   "findMentor": "Find Mentor",
 
@@ -258,16 +260,18 @@
     "actions": {
       "accept": "Accept",
       "reject": "Reject",
-      "openChat": "Go to Chat"
+      "openChat": "Open Chat"
     },
     "status": {
       "accepted": "Accepted",
       "rejected": "Rejected",
-      "pending": "Pending"
+      "pending": "Pending",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
     },
     "success": {
-      "accept": "Match accepted successfully",
-      "reject": "Match rejected successfully"
+      "accept": "Match successfully accepted",
+      "reject": "Match successfully rejected"
     },
     "errors": {
       "accept": "An error occurred while accepting the match",
@@ -275,11 +279,11 @@
     },
     "sections": {
       "active": "Active Matches",
-      "waiting": "Waiting Matches",
+      "outgoing": "Outgoing Matches",
       "past": "Past Matches"
     },
     "notifications": {
-      "new": "A mentee has sent you a mentorship request!",
+      "new": "A mentee sent you a mentorship request!",
       "title": "New Mentee Match"
     }
   },

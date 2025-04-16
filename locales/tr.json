@@ -104,6 +104,8 @@
   "searchMentee": "Mentee ara...",
   "activeMatches": "Aktif Eşleşmeler",
   "waitingMatches": "Bekleyen Eşleşmeler",
+  "incomingMatches": "Gelen Eşleşmeler",
+  "outgoingMatches": "Giden Eşleşmeler",
   "pastMatches": "Geçmiş Eşleşmeler",
   "findMentor": "Mentör Bul",
 
@@ -279,19 +281,21 @@
       "rejected": "Reddedilenler"
     },
     "empty": {
-      "pending": "Bekleyen eşleşme isteği bulunmuyor",
-      "accepted": "Kabul edilen eşleşme bulunmuyor",
-      "rejected": "Reddedilen eşleşme bulunmuyor"
+      "pending": "Bekleyen eşleşme isteği yok",
+      "accepted": "Kabul edilen eşleşme yok",
+      "rejected": "Reddedilen eşleşme yok"
     },
     "actions": {
       "accept": "Kabul Et",
       "reject": "Reddet",
-      "openChat": "Sohbete Git"
+      "openChat": "Sohbeti Aç"
     },
     "status": {
       "accepted": "Kabul Edildi",
       "rejected": "Reddedildi",
-      "pending": "Beklemede"
+      "pending": "Beklemede",
+      "incoming": "Gelen",
+      "outgoing": "Giden"
     },
     "success": {
       "accept": "Eşleşme başarıyla kabul edildi",
@@ -303,11 +307,11 @@
     },
     "sections": {
       "active": "Aktif Eşleşmeler",
-      "waiting": "Bekleyen Eşleşmeler",
+      "outgoing": "Giden Eşleşmeler",
       "past": "Geçmiş Eşleşmeler"
     },
     "notifications": {
-      "new": "Bir mentee sana mentorluk talebi gönderdi!",
+      "new": "Bir mentee size mentorluk isteği gönderdi!",
       "title": "Yeni Mentee Eşleşmesi"
     }
   },

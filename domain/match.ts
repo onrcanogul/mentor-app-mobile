@@ -10,10 +10,16 @@ export interface Match extends BaseEntity {
   receiver: User;
   sender: User;
   chat?: Chat;
+  type: MatchType;
 }
 
 export enum MatchStatus {
   Pending,
   Accepted,
   Rejected,
+}
+
+export enum MatchType {
+  Mentor,
+  Community,
 }
