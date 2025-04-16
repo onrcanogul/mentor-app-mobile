@@ -69,6 +69,7 @@ class UserService {
             ? "Mentee"
             : "General"
         );
+        await AsyncStorage.setItem("isAuthenticated", "true");
 
         successCallback();
         return resData.data;
@@ -86,6 +87,7 @@ class UserService {
     await AsyncStorage.removeItem("accessToken");
     await AsyncStorage.removeItem("refreshToken");
     await AsyncStorage.removeItem("role");
+    await AsyncStorage.removeItem("isAuthenticated");
   }
 
   async loginWithRefreshToken(
@@ -93,7 +95,8 @@ class UserService {
     errorCallback: () => void
   ) {
     const refreshToken = await AsyncStorage.getItem("refreshToken");
-    if (!refreshToken) return errorCallback();
+    const storedRole = await AsyncStorage.getItem("role");
+    if (!refreshToken || !storedRole) return errorCallback();
 
     try {
       const response = await api.post<ServiceResponse<Token>>(
@@ -105,12 +108,16 @@ class UserService {
       if (resData.isSuccessful && resData.data) {
         await AsyncStorage.setItem("accessToken", resData.data.accessToken);
         await AsyncStorage.setItem("refreshToken", resData.data.refreshToken);
+        await AsyncStorage.setItem("isAuthenticated", "true");
+        await AsyncStorage.setItem("role", storedRole);
         successCallback();
         return resData.data;
       } else {
+        await this.logout();
         errorCallback();
       }
     } catch (error) {
+      await this.logout();
       errorCallback();
     }
   }

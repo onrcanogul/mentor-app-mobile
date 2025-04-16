@@ -48,12 +48,25 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
+import { useChatSocket } from "../../hooks/useChatSocket";
+import messageService from "../../services/message-service";
 
 const AnimatedTouchable = Reanimated.createAnimatedComponent(TouchableOpacity);
 
 interface MessageGroup {
   date: string;
   data: Message[];
+}
+
+interface SignalRMessage {
+  chatId: string;
+  senderId: string;
+  content: string;
+  mediaUrl?: string;
+  duration?: number;
+  messageType: number;
+  createdDate: string;
+  isRead: boolean;
 }
 
 const MessageItem = React.memo(
@@ -185,6 +198,26 @@ const GeneralChatScreen = () => {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const flatListRef = useRef<FlatList<MessageGroup>>(null);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
+
+  const { sendMessage } = useChatSocket(chatId, (message: SignalRMessage) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      chatId: message.chatId,
+      senderId: message.senderId,
+      content: message.content,
+      messageType: message.messageType,
+      mediaUrl: message.mediaUrl,
+      duration: message.duration,
+      createdDate: new Date(message.createdDate),
+      isRead: message.isRead,
+      createdBy: "SYSTEM",
+      isDeleted: false,
+    };
+    setChat((prev) => ({
+      ...prev!,
+      messages: [...(prev?.messages || []), newMessage],
+    }));
+  });
 
   useEffect(() => {
     getCurrentUser();
@@ -505,36 +538,48 @@ const GeneralChatScreen = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!inputText.trim() || !currentUserId || !chat) return;
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !chat || !currentUserId) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      chatId: chat.id,
-      content: inputText.trim(),
+      chatId: chatId,
       senderId: currentUserId,
+      content: inputText.trim(),
       messageType: MessageType.Text,
       isRead: false,
       createdDate: new Date(),
+      createdBy: currentUserId,
+      isDeleted: false,
     };
 
-    const updatedChat = {
-      ...chat,
-      messages: [...(chat.messages || []), newMessage],
-    };
+    sendButtonScale.value = withSequence(withSpring(0.8), withSpring(1));
 
-    setChat(updatedChat);
     setInputText("");
-
-    try {
-      await chatService.create(
-        { id: chat.id, messages: [newMessage] },
-        () => {},
-        () => {}
-      );
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+    await sendMessage(
+      currentUserId,
+      inputText.trim(),
+      null,
+      null,
+      MessageType.Text
+    );
+    await messageService.create(
+      {
+        senderId: currentUserId,
+        content: inputText.trim(),
+        chatId: chatId,
+        messageType: MessageType.Text,
+        mediaUrl: null,
+        duration: null,
+        isRead: false,
+        createdDate: new Date(),
+        createdBy: "SYSTEM",
+        isDeleted: false,
+      },
+      () => {},
+      () => console.warn("Mesaj DB'ye yazılamadı")
+    );
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   const groupedMessages = useMemo(() => {
@@ -812,7 +857,7 @@ const GeneralChatScreen = () => {
 
           <AnimatedTouchable
             style={[styles.sendButton]}
-            onPress={inputText.trim() ? sendMessage : startRecording}
+            onPress={handleSendMessage}
             onPressIn={!inputText.trim() ? handlePressIn : undefined}
             onPressOut={!inputText.trim() ? handlePressOut : undefined}
           >

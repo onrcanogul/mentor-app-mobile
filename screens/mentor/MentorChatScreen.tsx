@@ -64,6 +64,17 @@ interface MessageGroup {
   data: Message[];
 }
 
+interface SignalRMessage {
+  chatId: string;
+  senderId: string;
+  content: string;
+  mediaUrl?: string;
+  duration?: number;
+  messageType: number;
+  createdDate: string;
+  isRead: boolean;
+}
+
 const MessageItem = React.memo(
   ({ item, isMe }: { item: Message; isMe: boolean }) => {
     const { theme } = useTheme();
@@ -252,15 +263,17 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     }
   };
 
-  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
+  const { sendMessage } = useChatSocket(chatId, (message: SignalRMessage) => {
     const newMessage: Message = {
       id: Date.now().toString(),
-      chatId,
-      senderId,
-      content: message,
-      messageType: MessageType.Text,
-      createdDate: new Date(),
-      isRead: false,
+      chatId: message.chatId,
+      senderId: message.senderId,
+      content: message.content,
+      messageType: message.messageType,
+      mediaUrl: message.mediaUrl,
+      duration: message.duration,
+      createdDate: new Date(message.createdDate),
+      isRead: message.isRead,
       createdBy: "SYSTEM",
       isDeleted: false,
     };
@@ -274,7 +287,7 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       id: Date.now().toString(),
       chatId: chatId,
       senderId: currentUserId,
-      content: inputText,
+      content: inputText.trim(),
       messageType: MessageType.Text,
       isRead: false,
       mediaUrl: null,
@@ -285,7 +298,13 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     };
 
     try {
-      sendMessage(currentUserId, inputText.trim());
+      await sendMessage(
+        currentUserId,
+        inputText.trim(),
+        null,
+        null,
+        MessageType.Text
+      );
       setInputText("");
 
       sendButtonScale.value = withSequence(
@@ -297,7 +316,7 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         {
           chatId: chatId,
           senderId: currentUserId,
-          content: inputText,
+          content: inputText.trim(),
           messageType: MessageType.Text,
           mediaUrl: null,
           duration: null,
@@ -421,8 +440,6 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
-
     try {
       setIsLoading(true);
       await recording.stopAndUnloadAsync();
@@ -449,16 +466,28 @@ const MentorChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
           createdDate: new Date(),
         };
 
-        const updatedChat = {
-          ...chat!,
-          messages: [...(chat?.messages || []), audioMessage],
-        };
-
-        setChat(updatedChat);
-
         try {
-          await chatService.create(
-            { id: chatId, messages: [audioMessage] },
+          await sendMessage(
+            currentUserId!,
+            t("audioMessage"),
+            uri,
+            recordingTime,
+            MessageType.Audio
+          );
+
+          await messageService.create(
+            {
+              chatId: chatId,
+              senderId: currentUserId!,
+              content: t("audioMessage"),
+              messageType: MessageType.Audio,
+              mediaUrl: uri,
+              duration: recordingTime,
+              isRead: false,
+              createdDate: new Date(),
+              createdBy: "SYSTEM",
+              isDeleted: false,
+            },
             () => {},
             () => {}
           );

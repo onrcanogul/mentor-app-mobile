@@ -41,7 +41,14 @@ const RegisterScreen = () => {
 
     setLoading(true);
     await userService.register(
-      { username, email, password, role: userType },
+      {
+        userName: username,
+        email,
+        password,
+        userRole: userType,
+        confirmPassword,
+        fullName: username,
+      },
       () => {
         toastrService.success(t("registerSuccess"));
         navigation.navigate("Login", { userType });

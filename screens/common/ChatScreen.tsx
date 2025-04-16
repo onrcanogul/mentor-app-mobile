@@ -21,7 +21,7 @@ import userService from "../../services/user-service";
 import toastrService from "../../services/toastr-service";
 import { useTheme } from "../../contexts/ThemeContext";
 
-import { Message } from "../../domain/message";
+import { Message, MessageType } from "../../domain/message";
 import { Chat, ChatStatus } from "../../domain/chat";
 import { formatDate } from "../../utils/dateFormatter";
 
@@ -70,24 +70,49 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     }, [chatId])
   );
 
-  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
+  const { sendMessage } = useChatSocket(chatId, (message) => {
     const newMessage: Message = {
       id: Date.now().toString(),
-      chatId,
-      senderId,
-      content: message,
-      createdDate: new Date(),
-      isRead: false,
+      chatId: message.chatId,
+      senderId: message.senderId,
+      content: message.content,
+      createdDate: new Date(message.createdDate),
+      isRead: message.isRead,
       createdBy: "SYSTEM",
       isDeleted: false,
+      messageType: message.messageType,
+      mediaUrl: message.mediaUrl,
+      duration: message.duration,
     };
-    setMessages((prev) => [...prev, newMessage]);
+
+    setMessages((prev) => {
+      const messageExists = prev.some(
+        (msg) =>
+          msg.senderId === newMessage.senderId &&
+          msg.content === newMessage.content &&
+          Math.abs(
+            new Date(msg.createdDate).getTime() -
+              new Date(newMessage.createdDate).getTime()
+          ) < 1000
+      );
+
+      if (!messageExists) {
+        const updatedMessages = [...prev, newMessage];
+        setTimeout(
+          () => flatListRef.current?.scrollToEnd({ animated: true }),
+          100
+        );
+        return updatedMessages;
+      }
+      return prev;
+    });
   });
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !currentUserId || chatEnded) return;
 
     const newMsg: Message = {
+      id: Date.now().toString(),
       chatId,
       senderId: currentUserId,
       content: inputText,
@@ -95,16 +120,26 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       isRead: false,
       createdBy: "SYSTEM",
       isDeleted: false,
+      messageType: MessageType.Text,
     };
 
+    setMessages((prev) => [...prev, newMsg]);
     setInputText("");
-    await sendMessage(currentUserId, inputText);
-    await messageService.create(
-      newMsg,
-      () => {},
-      () => console.warn("Mesaj DB'ye yazılamadı")
-    );
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+
+    try {
+      await sendMessage(currentUserId, inputText);
+
+      await messageService.create(
+        newMsg,
+        () => {},
+        () => console.warn("Mesaj DB'ye yazılamadı")
+      );
+    } catch (error) {
+      console.error("Mesaj gönderme hatası:", error);
+      setMessages((prev) => prev.filter((msg) => msg.id !== newMsg.id));
+      toastrService.error(t("messageSendError"));
+    }
   };
 
   const handleEndChat = async () => {

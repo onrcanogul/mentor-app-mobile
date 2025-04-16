@@ -49,6 +49,17 @@ import {
 } from "../../utils/dateFormatter";
 import LoadingSpinner from "../../utils/spinner";
 
+interface SignalRMessage {
+  chatId: string;
+  senderId: string;
+  content: string;
+  mediaUrl?: string;
+  duration?: number;
+  messageType: number;
+  createdDate: string;
+  isRead: boolean;
+}
+
 const AnimatedTouchable = Reanimated.createAnimatedComponent(TouchableOpacity);
 
 interface ChatScreenProps {
@@ -259,15 +270,17 @@ const MenteeChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     }
   };
 
-  const { sendMessage } = useChatSocket(chatId, (senderId, message) => {
+  const { sendMessage } = useChatSocket(chatId, (message: SignalRMessage) => {
     const newMessage: Message = {
       id: Date.now().toString(),
-      chatId,
-      senderId,
-      content: message,
-      messageType: MessageType.Text,
-      createdDate: new Date(),
-      isRead: false,
+      chatId: message.chatId,
+      senderId: message.senderId,
+      content: message.content,
+      messageType: message.messageType,
+      mediaUrl: message.mediaUrl,
+      duration: message.duration,
+      createdDate: new Date(message.createdDate),
+      isRead: message.isRead,
       createdBy: "SYSTEM",
       isDeleted: false,
     };
@@ -292,11 +305,17 @@ const MenteeChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     sendButtonScale.value = withSequence(withSpring(0.8), withSpring(1));
 
     setInputText("");
-    await sendMessage(currentUserId, inputText.trim());
+    await sendMessage(
+      currentUserId,
+      inputText.trim(),
+      null,
+      null,
+      MessageType.Text
+    );
     await messageService.create(
       {
         senderId: currentUserId,
-        content: inputText,
+        content: inputText.trim(),
         chatId: chatId,
         messageType: MessageType.Text,
         mediaUrl: null,
