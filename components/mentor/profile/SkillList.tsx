@@ -6,7 +6,7 @@ import { BlurView, BlurTint } from "expo-blur";
 import { Skill } from "../../../domain/skill";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { defaultTheme } from "../../../theme/defaultTheme";
-
+import { useTranslation } from "react-i18next";
 interface SkillListProps {
   skills: Skill[];
   isOwn: boolean;
@@ -15,6 +15,7 @@ interface SkillListProps {
 
 const SkillList: React.FC<SkillListProps> = ({ skills, isOwn, onEdit }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const isDarkMode = theme === defaultTheme;
 
   const CardBackground = Platform.OS === "ios" ? BlurView : View;
@@ -42,7 +43,7 @@ const SkillList: React.FC<SkillListProps> = ({ skills, isOwn, onEdit }) => {
             iconColor={theme.colors.primary.main}
           />
           <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-            Skills
+            {t("skills")}
           </Text>
         </View>
         {isOwn && (

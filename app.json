@@ -17,7 +17,7 @@
       "bundleIdentifier": "com.onrcanogul.mentorapp"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "package": "com.onrcanogul.mentorapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

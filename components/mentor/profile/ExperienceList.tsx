@@ -6,6 +6,7 @@ import { BlurView, BlurTint } from "expo-blur";
 import { Experience } from "../../../domain/experience";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface ExperienceListProps {
   experiences: Experience[];
@@ -19,7 +20,7 @@ const ExperienceList: React.FC<ExperienceListProps> = ({
   onEdit,
 }) => {
   const { theme } = useTheme();
-
+  const { t } = useTranslation();
   const CardBackground = Platform.OS === "ios" ? BlurView : View;
   const cardProps =
     Platform.OS === "ios"
@@ -41,7 +42,7 @@ const ExperienceList: React.FC<ExperienceListProps> = ({
             iconColor={theme.colors.primary.main}
           />
           <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-            Experience
+            {t("experiences")}
           </Text>
         </View>
         {isOwn && (
@@ -85,8 +86,8 @@ const ExperienceList: React.FC<ExperienceListProps> = ({
                         { color: theme.colors.primary.main },
                       ]}
                     >
-                      {formatDate(experience.StartDate)} -{" "}
-                      {formatDate(experience.EndDate)}
+                      {formatDate(experience.createdDate)} -{" "}
+                      {formatDate(experience.createdDate)}
                     </Text>
                   </View>
                   <Text

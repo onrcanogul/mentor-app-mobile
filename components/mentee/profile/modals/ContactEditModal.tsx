@@ -10,6 +10,7 @@ import {
 import { Text, Button } from "react-native-paper";
 import { Contact } from "../../../../domain/contact";
 import * as SystemUI from "expo-system-ui";
+import { useTranslation } from "react-i18next";
 
 interface ContactEditModalProps {
   visible: boolean;
@@ -25,7 +26,7 @@ const ContactEditModal: React.FC<ContactEditModalProps> = ({
   onSave,
 }) => {
   const [email, setEmail] = useState<string>(contact.email);
-
+  const { t } = useTranslation();
   const handleSave = () => {
     onSave({ email });
     onClose();
@@ -67,7 +68,7 @@ const ContactEditModal: React.FC<ContactEditModalProps> = ({
           <Text style={styles.modalTitle}>İletişim Bilgilerini Düzenle</Text>
 
           <TextInput
-            placeholder="E-posta"
+            placeholder={t("email")}
             placeholderTextColor="#A0A0A0"
             value={email}
             onChangeText={setEmail}
@@ -77,10 +78,10 @@ const ContactEditModal: React.FC<ContactEditModalProps> = ({
 
           <View style={styles.actions}>
             <Button onPress={onClose} style={{ backgroundColor: "#FFD700" }}>
-              İptal
+              {t("cancel")}
             </Button>
             <Button style={{ backgroundColor: "#FFD700" }} onPress={handleSave}>
-              Kaydet
+              {t("save")}
             </Button>
           </View>
         </View>

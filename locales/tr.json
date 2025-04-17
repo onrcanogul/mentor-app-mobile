@@ -416,5 +416,43 @@
     "recording": "Kayıt yapılıyor...",
     "send": "Gönder",
     "attach": "Ekle"
+  },
+
+  "usernameRequired": "Kullanıcı adı gerekli",
+  "usernameTooShort": "Kullanıcı adı en az 3 karakter olmalı",
+  "fullNameRequired": "Ad soyad gerekli",
+  "emailRequired": "E-posta adresi gerekli",
+  "invalidEmail": "Geçersiz e-posta adresi",
+  "passwordRequired": "Şifre gerekli",
+  "passwordTooShort": "Şifre en az 8 karakter olmalı",
+  "confirmPasswordRequired": "Şifre onayı gerekli",
+
+  "auth": {
+    "mentorTitle": "👨‍🏫 Mentor",
+    "menteeTitle": "👩‍🎓 Mentee",
+    "communityTitle": "👥 Topluluk Üyesi",
+    "welcomeBack": "Tekrar Hoşgeldiniz!",
+    "emailOrUsername": "E-posta veya Kullanıcı Adı",
+    "password": "Şifre",
+    "login": "Giriş Yap",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "signUp": "Kayıt Ol",
+    "createAccount": "Hesap Oluşturun",
+    "username": "Kullanıcı Adı",
+    "fullName": "Ad Soyad",
+    "email": "E-posta",
+    "confirmPassword": "Şifreyi Onaylayın",
+    "alreadyHaveAccount": "Zaten hesabınız var mı?",
+    "register": "Kayıt Ol",
+    "usernameRequired": "Kullanıcı adı gerekli",
+    "usernameTooShort": "Kullanıcı adı en az 3 karakter olmalı",
+    "fullNameRequired": "Ad soyad gerekli",
+    "emailRequired": "E-posta adresi gerekli",
+    "invalidEmail": "Geçersiz e-posta adresi",
+    "passwordRequired": "Şifre gerekli",
+    "passwordTooShort": "Şifre en az 8 karakter olmalı",
+    "confirmPasswordRequired": "Şifre onayı gerekli",
+    "passwordsDoNotMatch": "Şifreler eşleşmiyor",
+    "registerSuccess": "Kayıt başarılı!"
   }
 }

@@ -6,6 +6,7 @@ import { BlurView, BlurTint } from "expo-blur";
 import { Category } from "../../../domain/category";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { defaultTheme } from "../../../theme/defaultTheme";
+import { useTranslation } from "react-i18next";
 
 interface CategoryListProps {
   categories: Category[];
@@ -20,6 +21,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDarkMode = theme === defaultTheme;
+  const { t } = useTranslation();
 
   const CardBackground = Platform.OS === "ios" ? BlurView : View;
   const cardProps =
@@ -46,7 +48,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
             iconColor={theme.colors.primary.main}
           />
           <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-            Categories
+            {t("categories")}
           </Text>
         </View>
         {isOwn && (
@@ -87,7 +89,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
                       { color: theme.colors.text.primary },
                     ]}
                   >
-                    {category.name}
+                    {t(category.localizationCode)}
                   </Text>
                 </CardBackground>
               </Animated.View>

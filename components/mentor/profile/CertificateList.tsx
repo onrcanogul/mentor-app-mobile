@@ -5,6 +5,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { BlurView, BlurTint } from "expo-blur";
 import { Certificate } from "../../../domain/certificate";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 
 interface CertificateListProps {
   certificates: Certificate[];
@@ -18,7 +19,7 @@ const CertificateList: React.FC<CertificateListProps> = ({
   onEdit,
 }) => {
   const { theme } = useTheme();
-
+  const { t } = useTranslation();
   const CardBackground = Platform.OS === "ios" ? BlurView : View;
   const cardProps =
     Platform.OS === "ios"
@@ -35,7 +36,7 @@ const CertificateList: React.FC<CertificateListProps> = ({
             iconColor={theme.colors.primary.main}
           />
           <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-            Certificates
+            {t("certificates")}
           </Text>
         </View>
         {isOwn && (

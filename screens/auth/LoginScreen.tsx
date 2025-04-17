@@ -65,11 +65,11 @@ const LoginScreen = () => {
   const getUserTitle = () => {
     switch (userType) {
       case UserType.Mentor:
-        return "👨‍🏫 " + t("mentor");
+        return t("auth.mentorTitle");
       case UserType.Mentee:
-        return "👩‍🎓 " + t("mentee");
+        return t("auth.menteeTitle");
       default:
-        return "👥 " + t("communityMember");
+        return t("auth.communityTitle");
     }
   };
 
@@ -102,13 +102,13 @@ const LoginScreen = () => {
               { color: theme.colors.text.secondary },
             ]}
           >
-            {t("welcomeBack")}
+            {t("auth.welcomeBack")}
           </Text>
         </View>
 
         <View style={styles.form}>
           <TextInput
-            label={t("emailOrUsername")}
+            label={t("auth.emailOrUsername")}
             value={email}
             onChangeText={setEmail}
             mode="outlined"
@@ -128,7 +128,7 @@ const LoginScreen = () => {
           />
 
           <TextInput
-            label={t("password")}
+            label={t("auth.password")}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -165,7 +165,7 @@ const LoginScreen = () => {
               { color: theme.colors.button.text },
             ]}
           >
-            {t("login")}
+            {t("auth.login")}
           </Button>
 
           <TouchableOpacity
@@ -178,14 +178,14 @@ const LoginScreen = () => {
                 { color: theme.colors.text.secondary },
               ]}
             >
-              {t("dontHaveAccount")}{" "}
+              {t("auth.dontHaveAccount")}{" "}
               <Text
                 style={[
                   styles.registerTextBold,
                   { color: theme.colors.text.accent },
                 ]}
               >
-                {t("signUp")}
+                {t("auth.signUp")}
               </Text>
             </Text>
           </TouchableOpacity>

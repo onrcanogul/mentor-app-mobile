@@ -55,44 +55,44 @@ const RegisterScreen = () => {
 
     // Username validation
     if (!formData.username.trim()) {
-      newErrors.username = t("usernameRequired");
+      newErrors.username = t("auth.usernameRequired");
       isValid = false;
     } else if (formData.username.length < 3) {
-      newErrors.username = t("usernameTooShort");
+      newErrors.username = t("auth.usernameTooShort");
       isValid = false;
     }
 
     // Full name validation
     if (!formData.fullName.trim()) {
-      newErrors.fullName = t("fullNameRequired");
+      newErrors.fullName = t("auth.fullNameRequired");
       isValid = false;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = t("emailRequired");
+      newErrors.email = t("auth.emailRequired");
       isValid = false;
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = t("invalidEmail");
+      newErrors.email = t("auth.invalidEmail");
       isValid = false;
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = t("passwordRequired");
+      newErrors.password = t("auth.passwordRequired");
       isValid = false;
     } else if (formData.password.length < 8) {
-      newErrors.password = t("passwordTooShort");
+      newErrors.password = t("auth.passwordTooShort");
       isValid = false;
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = t("confirmPasswordRequired");
+      newErrors.confirmPassword = t("auth.confirmPasswordRequired");
       isValid = false;
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = t("passwordsDoNotMatch");
+      newErrors.confirmPassword = t("auth.passwordsDoNotMatch");
       isValid = false;
     }
 
@@ -124,7 +124,7 @@ const RegisterScreen = () => {
         userRole: userType,
       },
       () => {
-        toastrService.success(t("registerSuccess"));
+        toastrService.success(t("auth.registerSuccess"));
         navigation.navigate("Login", { userType });
         setLoading(false);
       },
@@ -148,11 +148,11 @@ const RegisterScreen = () => {
   const getUserTitle = () => {
     switch (userType) {
       case UserType.Mentor:
-        return "👨‍🏫 " + t("mentor");
+        return t("auth.mentorTitle");
       case UserType.Mentee:
-        return "👩‍🎓 " + t("mentee");
+        return t("auth.menteeTitle");
       default:
-        return "👥 " + t("communityMember");
+        return t("auth.communityTitle");
     }
   };
 
@@ -186,13 +186,13 @@ const RegisterScreen = () => {
                 { color: theme.colors.text.secondary },
               ]}
             >
-              {t("createAccount")}
+              {t("auth.createAccount")}
             </Text>
           </View>
 
           <View style={styles.form}>
             <TextInput
-              label={t("username")}
+              label={t("auth.username")}
               value={formData.username}
               onChangeText={(value) => handleInputChange("username", value)}
               mode="outlined"
@@ -220,7 +220,7 @@ const RegisterScreen = () => {
             )}
 
             <TextInput
-              label={t("fullName")}
+              label={t("auth.fullName")}
               value={formData.fullName}
               onChangeText={(value) => handleInputChange("fullName", value)}
               mode="outlined"
@@ -248,7 +248,7 @@ const RegisterScreen = () => {
             )}
 
             <TextInput
-              label={t("email")}
+              label={t("auth.email")}
               value={formData.email}
               onChangeText={(value) => handleInputChange("email", value)}
               mode="outlined"
@@ -278,7 +278,7 @@ const RegisterScreen = () => {
             )}
 
             <TextInput
-              label={t("password")}
+              label={t("auth.password")}
               value={formData.password}
               onChangeText={(value) => handleInputChange("password", value)}
               secureTextEntry={!showPassword}
@@ -314,7 +314,7 @@ const RegisterScreen = () => {
             )}
 
             <TextInput
-              label={t("confirmPassword")}
+              label={t("auth.confirmPassword")}
               value={formData.confirmPassword}
               onChangeText={(value) =>
                 handleInputChange("confirmPassword", value)
@@ -366,7 +366,7 @@ const RegisterScreen = () => {
                 { color: theme.colors.button.text },
               ]}
             >
-              {t("register")}
+              {t("auth.register")}
             </Button>
 
             <TouchableOpacity
@@ -379,14 +379,14 @@ const RegisterScreen = () => {
                   { color: theme.colors.text.secondary },
                 ]}
               >
-                {t("alreadyHaveAccount")}{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <Text
                   style={[
                     styles.loginTextBold,
                     { color: theme.colors.text.accent },
                   ]}
                 >
-                  {t("login")}
+                  {t("auth.login")}
                 </Text>
               </Text>
             </TouchableOpacity>

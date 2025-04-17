@@ -6,12 +6,7 @@ import { BlurView, BlurTint } from "expo-blur";
 import { Category } from "../../../domain/category";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { defaultTheme } from "../../../theme/defaultTheme";
-import userService from "../../../services/user-service";
-import menteeService from "../../../services/mentee-service";
-import mentorService from "../../../services/mentor-service";
-import communityUserService from "../../../services/community-user-service";
 import { useTranslation } from "react-i18next";
-import toastrService from "../../../services/toastr-service";
 
 interface CategoryListProps {
   userId?: string;

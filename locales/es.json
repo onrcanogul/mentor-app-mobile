@@ -4,6 +4,10 @@
   "homeMentee": "Continuar como Aprendiz",
   "homeGeneral": "Continuar como Miembro de la Comunidad",
   "communityMember": "Miembro de la Comunidad",
+  "home0Description": "Encuentra aprendices y comparte tu conocimiento",
+  "home1Description": "Conéctate con mentores y desarrolla tus habilidades",
+  "home2Description": "Únete a la comunidad y aprende en conjunto",
+  "homeDescription": "Conecta, Aprende, Crece",
 
   "welcomeAIMessage": "¡Hola! Soy tu asistente personal de IA. Puedes hacer preguntas sobre cualquier tema y recibir orientación relacionada con tu carrera.",
   "chatTitle": "Título de la conversación...",
