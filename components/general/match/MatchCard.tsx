@@ -35,6 +35,7 @@ interface MatchCardProps {
   setLoading?: (loading: boolean) => void;
   isLoading?: boolean;
   setMatches?: React.Dispatch<React.SetStateAction<Match[]>>;
+  isIncoming: boolean;
 }
 
 const MatchCard = ({
@@ -43,12 +44,12 @@ const MatchCard = ({
   setLoading,
   isLoading,
   setMatches,
+  isIncoming,
 }: MatchCardProps) => {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [isIncoming, setIsIncoming] = useState(false);
 
   const scale = useSharedValue(1);
 
@@ -56,10 +57,9 @@ const MatchCard = ({
     const fetchCurrentUser = async () => {
       const user = await userService.getCurrentUser();
       setCurrentUserId(user.id);
-      setIsIncoming(match.receiverId === user.id);
     };
     fetchCurrentUser();
-  }, [match]);
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -122,9 +122,7 @@ const MatchCard = ({
 
   const getStatusLabel = (status: MatchStatus) => {
     if (status === MatchStatus.Pending) {
-      return isIncoming
-        ? t("match.status.incoming")
-        : t("match.status.outgoing");
+      return isIncoming ? t("match.status.pending") : t("waiting");
     }
     switch (status) {
       case MatchStatus.Accepted:

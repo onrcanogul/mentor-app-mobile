@@ -172,6 +172,7 @@ const GeneralMatchScreen = () => {
             setLoading={setLoading}
             isLoading={isLoading}
             setMatches={setMatches}
+            isIncomingSection={false}
           />
         </Animated.View>
 
@@ -186,6 +187,7 @@ const GeneralMatchScreen = () => {
             setLoading={setLoading}
             isLoading={isLoading}
             setMatches={setMatches}
+            isIncomingSection={true}
           />
         </Animated.View>
 
@@ -200,6 +202,7 @@ const GeneralMatchScreen = () => {
             setLoading={setLoading}
             isLoading={isLoading}
             setMatches={setMatches}
+            isIncomingSection={false}
           />
         </Animated.View>
 
@@ -214,6 +217,7 @@ const GeneralMatchScreen = () => {
             setLoading={setLoading}
             isLoading={isLoading}
             setMatches={setMatches}
+            isIncomingSection={false}
           />
         </Animated.View>
       </Animated.ScrollView>

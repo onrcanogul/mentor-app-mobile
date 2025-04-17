@@ -16,6 +16,7 @@ interface MatchSectionProps {
   setLoading: (loading: boolean) => void;
   isLoading: boolean;
   setMatches: React.Dispatch<React.SetStateAction<Match[]>>;
+  isIncomingSection: boolean;
 }
 
 const MatchSection = ({
@@ -26,6 +27,7 @@ const MatchSection = ({
   setLoading,
   isLoading,
   setMatches,
+  isIncomingSection,
 }: MatchSectionProps) => {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const { theme } = useTheme();
@@ -59,37 +61,19 @@ const MatchSection = ({
       </TouchableOpacity>
 
       {isVisible && (
-        <>
-          {incomingMatches.length > 0 && (
-            <View style={styles.section}>
-              {incomingMatches.map((match, index) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  index={index}
-                  setLoading={setLoading}
-                  isLoading={isLoading}
-                  setMatches={setMatches}
-                />
-              ))}
-            </View>
-          )}
-
-          {outgoingMatches.length > 0 && (
-            <View style={styles.section}>
-              {outgoingMatches.map((match, index) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  index={index}
-                  setLoading={setLoading}
-                  isLoading={isLoading}
-                  setMatches={setMatches}
-                />
-              ))}
-            </View>
-          )}
-        </>
+        <View style={styles.section}>
+          {matches.map((match, index) => (
+            <MatchCard
+              key={match.id}
+              match={match}
+              index={index}
+              setLoading={setLoading}
+              isLoading={isLoading}
+              setMatches={setMatches}
+              isIncoming={isIncomingSection}
+            />
+          ))}
+        </View>
       )}
     </Animated.View>
   );
